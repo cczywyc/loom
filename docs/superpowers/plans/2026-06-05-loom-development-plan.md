@@ -765,13 +765,15 @@ def test_other_sections_untouched_byte_identical(tmp_path):
 
 ## Task 0.9: WikiStore 读取面（read_page / list_pages）
 
+> **✅ 已完成** · 2026-06-08 · commit `a2cf8a5` · 3 passed（全量 27 passed），ruff/format 全绿。**计划修正**：conftest 的 `wiki_root` fixture 原引用 `loom.api.Loom.init_wiki`（Task 0.13 才有），改为直接调 `scaffold.init_wiki`，否则 store 测试在 fixture 阶段即 ModuleNotFoundError。`read_page` 把磁盘 sha256 写入 `content_hash`（OCC 起点）。**取舍**：未做 `_name_cache`（每次扫描六目录即可，个人尺度足够快，省去缓存失效复杂度）。
+
 **目的：** agent 拉取页面的入口；`read_page` 返回 `content_hash` 是 OCC 协议的起点（读到的 hash 在写回时带上）。
 
 **Files:**
 - Create: `src/loom/core/store.py`
 - Test: `tests/core/test_store_read.py`
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 ```python
 # tests/core/test_store_read.py
@@ -810,7 +812,7 @@ def test_list_pages_filters_by_type_and_tag(store, wiki_root):
     assert {p.name for p in store.list_pages()} == {"react", "karpathy"}
 ```
 
-- [ ] **Step 2: 确认失败。Step 3: 实现要点**：`WikiStore(paths)` 持 `LoomPaths`；name→path 通过扫描六个类型目录（个人尺度数百文件，glob 足够快；维护 `self._name_cache` 供 `known_names()` 复用）；`list_pages` 返回 `PageSummary` 列表（只解析 frontmatter，不含 body）。`index.md`/`log.md` 不是页面，排除。**Step 4: 确认通过。Step 5: Commit** — `git commit -m "feat: wiki store read side"`
+- [x] **Step 2: 确认失败。Step 3: 实现要点**：`WikiStore(paths)` 持 `LoomPaths`；name→path 通过扫描六个类型目录（个人尺度数百文件，glob 足够快；维护 `self._name_cache` 供 `known_names()` 复用）；`list_pages` 返回 `PageSummary` 列表（只解析 frontmatter，不含 body）。`index.md`/`log.md` 不是页面，排除。**Step 4: 确认通过。Step 5: Commit** — `git commit -m "feat: wiki store read side"`
 
 ## Task 0.10: WikiStore.write_page（校验 + 锁 + OCC + 原子写 + 自动记账）
 

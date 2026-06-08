@@ -20,9 +20,10 @@ def page_md(*, type: str, title: str, body: str = "", **extra) -> str:
 
 @pytest.fixture
 def wiki_root(tmp_path):
-    from loom.api import Loom
+    # 直接用 scaffold 原语建测试库；Loom.init_wiki 到 Task 0.13 才存在，且届时也只是委托给它。
+    from loom.core.scaffold import init_wiki
 
-    Loom.init_wiki(tmp_path / "kb", template="blank")
+    init_wiki(tmp_path / "kb", template="blank")
     return tmp_path / "kb"
 
 

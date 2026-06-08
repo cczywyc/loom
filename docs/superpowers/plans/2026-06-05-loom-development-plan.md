@@ -673,13 +673,15 @@ def page_lock(loom_dir: Path, name: str, timeout: float = 10.0):
 
 ## Task 0.7: LogWriter
 
+> **✅ 已完成** · 2026-06-08 · commit `f9f754d` · 2 passed（全量 20 passed），ruff/format 全绿。`LogWriter` 经 `from loom import clock` 调 `clock.now_iso()`（按模块取用），测试 monkeypatch `loom.clock.now_iso` 才能生效。
+
 **目的：** `log.md` append-only 操作历史，统一前缀格式便于 `grep`——agent 和人都能追溯"谁在何时改了哪页"。
 
 **Files:**
 - Create: `src/loom/core/log.py`
 - Test: `tests/core/test_log.py`
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 ```python
 # tests/core/test_log.py
@@ -700,7 +702,7 @@ def test_append_creates_file_with_header(tmp_path):
     assert (tmp_path / "log.md").read_text().startswith("# Log\n")
 ```
 
-- [ ] **Step 2: 确认失败。Step 3: 实现**（`append(op, name, detail="")`：文件不存在先写 `# Log\n\n` 头；以 `a` 模式追加一行 `- {now_iso()} | {op} | {name} | {detail}`；op 取值约定 `INIT/REGISTER/WRITE/UPDATE/FIX/REVIEW`）。**Step 4: 确认通过。Step 5: Commit** — `git commit -m "feat: append-only log writer"`
+- [x] **Step 2: 确认失败。Step 3: 实现**（`append(op, name, detail="")`：文件不存在先写 `# Log\n\n` 头；以 `a` 模式追加一行 `- {now_iso()} | {op} | {name} | {detail}`；op 取值约定 `INIT/REGISTER/WRITE/UPDATE/FIX/REVIEW`）。**Step 4: 确认通过。Step 5: Commit** — `git commit -m "feat: append-only log writer"`
 
 ## Task 0.8: IndexManager（增量更新）
 

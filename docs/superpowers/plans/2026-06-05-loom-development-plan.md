@@ -900,13 +900,15 @@ def write_page(self, name: str, content: str, base_hash: str | None = None) -> W
 
 ## Task 0.11: WikiStore.update_page（非破坏性段级补丁）
 
+> **✅ 已完成** · 2026-06-08 · commit `0c0784b` · 7 passed（5 sections + 2 update；全量 40 passed），ruff/format 全绿。`Section` 用 dataclass；区段到下一个同级/更高级标题为止（子节随父节）。`update_page` 锁内 read→patch→`meta.updated=clock.today()`→重校验→写→index/log；`set_frontmatter` 走 `model_copy(update=...)`，日志 detail 区分以免出现 "section=None"。测试去掉未用的 `res=`（F841）。
+
 **目的：** 保护"积累/复利"属性的关键原语：agent 改一节不会覆掉全页。锁内 read-modify-write，天然无丢失更新。
 
 **Files:**
 - Modify: `src/loom/core/store.py`；Create: `src/loom/core/sections.py`
 - Test: `tests/core/test_sections.py`, `tests/core/test_store_update.py`
 
-- [ ] **Step 1: 写失败测试（先纯函数，后 store 集成）**
+- [x] **Step 1: 写失败测试（先纯函数，后 store 集成）**
 
 ```python
 # tests/core/test_sections.py
@@ -965,11 +967,11 @@ def test_update_set_frontmatter_merges_only_given_keys(store):
     assert page.meta.tags == ["agent"]                       # 未提及字段不动
 ```
 
-- [ ] **Step 2: 确认失败。Step 3: 实现要点**：
+- [x] **Step 2: 确认失败。Step 3: 实现要点**：
   - `sections.py`：`HEADING_RE = re.compile(r"^(#{2,6})\s+(.*?)\s*$")` 按行扫描得 `Section(level, title, start_line, end_line)`，节的范围到下一个**同级或更高级**标题为止（子节随父节走）；`apply_patch` 按 op 在行列表上重组，返回新 body。`set_frontmatter` 在 `store` 层处理（YAML 解析 content → `meta.model_copy(update=...)`），不进 `sections.py`。
   - `store.update_page`：`page_lock` 内 read → `apply_patch` → `meta.updated = clock.today()` → 校验 → `atomic_write_text` → `index.upsert`（summary/title 可能变）→ `log.append("UPDATE", name, f"{patch.op} section={patch.section}")`。
   - 可选 `base_hash` 参数：传了就校验（语义同 write_page）；不传也安全（锁内 RMW）。
-- [ ] **Step 4: 确认通过。Step 5: Commit** — `git commit -m "feat: non-destructive section-level update_page"`
+- [x] **Step 4: 确认通过。Step 5: Commit** — `git commit -m "feat: non-destructive section-level update_page"`
 
 ## Task 0.12: ContentHash + register_source
 

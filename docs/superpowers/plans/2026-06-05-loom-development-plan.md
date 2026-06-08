@@ -706,6 +706,8 @@ def test_append_creates_file_with_header(tmp_path):
 
 ## Task 0.8: IndexManager（增量更新）
 
+> **✅ 已完成** · 2026-06-08 · commit `2d492f3` · 4 passed（全量 24 passed），ruff/format 全绿。增量做法：parse → `{type:{name:line}}` → 按 `TYPE_DIRS` 节序 + name 字典序**确定性重组** → `atomic_write_text`；序列化幂等，故未触及的节逐字节不变。ruff format 自动折行了一条超长测试行。
+
 **目的：** `index.md` 是 agent 定位内容的目录页，必须**增量** upsert（不是每次全量重生成）——这是架构反复强调的"写页副作用自动记账"的一半（另一半是 log）。
 
 **Files:**
@@ -714,7 +716,7 @@ def test_append_creates_file_with_header(tmp_path):
 
 索引行格式约定：`- [[<name>|<title>]] — <summary>`（summary 为空则省略 ` — ` 之后部分），按 name 字典序排在对应 `## <type>` 节内。
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 ```python
 # tests/core/test_index.py
@@ -759,7 +761,7 @@ def test_other_sections_untouched_byte_identical(tmp_path):
     assert before.split("## concepts")[0] == after.split("## concepts")[0]   # entities 节逐字节未动
 ```
 
-- [ ] **Step 2: 确认失败。Step 3: 实现要点**：解析 `index.md` 为 `{type: dict[name, line]}`（行用 `- [[name|` 前缀匹配 name）；upsert/remove 后按节序+name 序重组全文，经 `atomic_write_text` 落盘。**Step 4: 确认通过。Step 5: Commit** — `git commit -m "feat: incremental index manager"`
+- [x] **Step 2: 确认失败。Step 3: 实现要点**：解析 `index.md` 为 `{type: dict[name, line]}`（行用 `- [[name|` 前缀匹配 name）；upsert/remove 后按节序+name 序重组全文，经 `atomic_write_text` 落盘。**Step 4: 确认通过。Step 5: Commit** — `git commit -m "feat: incremental index manager"`
 
 ## Task 0.9: WikiStore 读取面（read_page / list_pages）
 

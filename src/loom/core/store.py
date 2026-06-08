@@ -2,16 +2,24 @@ from collections.abc import Iterator
 from pathlib import Path
 
 from loom.config import LoomPaths
-from loom.core.fsutil import sha256_file
-from loom.errors import NotFound
-from loom.models import TYPE_DIRS, PageSummary, WikiPage, loads_page
+from loom.core.fsutil import atomic_write_text, sha256_file, sha256_text
+from loom.core.index import IndexManager
+from loom.core.lock import page_lock
+from loom.core.log import LogWriter
+from loom.errors import Conflict, NotFound, ValidationFailed
+from loom.models import TYPE_DIRS, PageSummary, WikiPage, WriteResult, dumps_page, loads_page
+from loom.validate import validate_page
 
 
 class WikiStore:
-    """wiki 目录读写抽象。本任务（0.9）只实现读取面；写入面在 0.10/0.11 补。"""
+    """wiki 目录读写抽象：read/list（0.9）+ write_page（0.10：校验+锁+OCC+原子写+自动记账）。"""
 
     def __init__(self, paths: LoomPaths):
         self.paths = paths
+        self.index = IndexManager(paths.index_md)
+        self.log = LogWriter(paths.log_md)
+
+    # ---- 读取面 ----
 
     def _iter_page_paths(self) -> Iterator[Path]:
         """遍历六个类型目录下的所有 .md 页面（index.md/log.md 不在其中，天然排除）。"""
@@ -25,6 +33,9 @@ class WikiStore:
             if p.stem == name:
                 return p
         return None
+
+    def _path_for(self, page: WikiPage) -> Path:
+        return self.paths.wiki_dir / TYPE_DIRS[page.meta.type] / f"{page.name}.md"
 
     def known_names(self) -> set[str]:
         return {p.stem for p in self._iter_page_paths()}
@@ -56,3 +67,43 @@ class WikiStore:
                 )
             )
         return result
+
+    # ---- 写入面 ----
+
+    def write_page(self, name: str, content: str, base_hash: str | None = None) -> WriteResult:
+        """校验结构 → 加锁 → OCC 比对 → 原子落盘 → 副作用同步 index/log。不合规则拒绝。
+
+        OCC：新建无需 base_hash；覆写已存在页必须带读取时的 base_hash 且与磁盘一致，否则 Conflict。
+        """
+        page = loads_page(name, content)
+        problems, warnings = validate_page(page, self.known_names() | {name})
+        if problems:
+            raise ValidationFailed("; ".join(problems))
+        path = self._path_for(page)
+        existing = self._find_existing(name)
+        with page_lock(self.paths.loom_dir, name):
+            if existing and existing != path:
+                raise Conflict(f"name '{name}' already used at {existing}")
+            if path.exists():
+                disk = sha256_file(path)
+                if base_hash is None:
+                    raise Conflict(
+                        f"page '{name}' exists; read it first and pass base_hash, or use update_page"
+                    )
+                if disk != base_hash:
+                    raise Conflict(
+                        f"page '{name}' changed on disk since you read it; re-read and retry"
+                    )
+            created = not path.exists()
+            text = dumps_page(page)
+            atomic_write_text(path, text)
+            self.index.upsert(page)
+            self.log.append("WRITE", name, "created" if created else "updated")
+        return WriteResult(
+            ok=True,
+            name=name,
+            path=str(path),
+            created=created,
+            content_hash=sha256_text(text),
+            warnings=warnings,
+        )

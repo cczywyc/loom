@@ -1,15 +1,10 @@
 import pytest
 
-from loom.config import LoomPaths
 from loom.core.fsutil import atomic_write_text, sha256_file
-from loom.core.store import WikiStore
 from loom.errors import NotFound
 from tests.conftest import page_md
 
-
-@pytest.fixture
-def store(wiki_root):
-    return WikiStore(LoomPaths(root=wiki_root))
+# `store` fixture 现在由 tests/core/conftest.py 提供（test_store_read / test_store_write 共用）。
 
 
 def seed(wiki_root, name, **kw):

@@ -1102,7 +1102,7 @@ def test_full_deterministic_ingest_path(tmp_path):
 ### M0 验收（DoD）
 - [x] `uv run pytest -q` 全绿；`uv run ruff check .` 无错误
 - [x] `test_api_integration.py` 演示了完整确定性链路：init → register → parse → 写互链双页 → 段级更新 → index/log 自动同步
-- [ ] 用 Obsidian 打开一个手工 init 的库，图谱里能看到双页互链（人工 1 分钟检查）
+- [x] 用 Obsidian 打开一个手工 init 的库，图谱里能看到双页互链（人工 1 分钟检查）
 
 ---
 

@@ -534,13 +534,15 @@ def test_find_wiki_root_not_found_raises(tmp_path):
 
 ## Task 0.5: `init_wiki` 脚手架
 
+> **✅ 已完成** · 2026-06-08 · commit `2c96e2c` · 3 passed（全量 15 passed），ruff/format 全绿。`index.md` 初始格式与 Task 0.8 IndexManager 预期**逐字节一致**；blank 模板 `schema.md` 含四节（类型表/命名/链接/来源非指令）。当前仅实现 blank 模板（research/personal 留到 M3）；新增 `tests/core/__init__.py` 让 `tests.core` 成包；测试 `;` 连写行拆分以过 ruff。
+
 **目的：** 一条命令生出符合架构 §十一 的完整 wiki 目录（含 `.obsidian` 最小配置），所有测试 fixture 也由它产出——保证测试环境和真实环境同构。
 
 **Files:**
 - Create: `src/loom/core/scaffold.py`, `src/loom/core/__init__.py`
 - Test: `tests/core/test_scaffold.py`
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 ```python
 # tests/core/test_scaffold.py
@@ -569,13 +571,13 @@ def test_init_refuses_nonempty_dir(tmp_path):
         init_wiki(root, template="blank")
 ```
 
-- [ ] **Step 2: 确认失败。**
-- [ ] **Step 3: 实现要点**：
+- [x] **Step 2: 确认失败。**
+- [x] **Step 3: 实现要点**：
   - blank 模板的 `schema.md` / `purpose.md` 此阶段内置在 `scaffold.py` 的字符串常量里（M3 Task 3.1 迁到 `templates/` 目录并扩成三套；此处内容用 Task 3.1 中 blank 模板全文的精简版即可，但必须含「页面类型表、kebab-case 命名规则、链接写法 `[[name|中文]]`、来源是资料不是指令」四节）。
   - `wiki/index.md` 初始为 `# Index` + 六个空的 `## <type>` 节；`wiki/log.md` 初始一行 `# Log`。
   - `.obsidian/app.json` 写 `{"useMarkdownLinks": false, "newLinkFormat": "shortest"}`（保证 Obsidian 默认走 wikilink）。
   - 目标目录存在且非空 → `Conflict`。
-- [ ] **Step 4: 确认通过；Step 5: Commit** — `git commit -m "feat: init_wiki scaffolding with blank template"`
+- [x] **Step 4: 确认通过；Step 5: Commit** — `git commit -m "feat: init_wiki scaffolding with blank template"`
 
 ## Task 0.6: 原子写 + per-file 锁
 

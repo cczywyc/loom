@@ -816,6 +816,8 @@ def test_list_pages_filters_by_type_and_tag(store, wiki_root):
 
 ## Task 0.10: WikiStore.write_page（校验 + 锁 + OCC + 原子写 + 自动记账）
 
+> **✅ 已完成** · 2026-06-08 · commit `2e46af9` · 6 passed（全量 33 passed），ruff/format 全绿。计划代码逐字采用：校验 → `page_lock` → OCC（磁盘 sha256 比对 `base_hash`）→ `atomic_write_text` → 副作用 `index.upsert` + `log.append`。`WikiStore.__init__` 接入 IndexManager/LogWriter；store fixture 抽到 `tests/core/conftest.py` 共用。
+
 **目的：** 整个工具最核心的一个原语：不合规拒绝、并发不坏、崩溃不残、index/log 自动同步。「agent 不会忘记更新引用」的承诺就落在这里。
 
 **Files:**
@@ -824,7 +826,7 @@ def test_list_pages_filters_by_type_and_tag(store, wiki_root):
 
 OCC 协议：**新建**页面不需要 `base_hash`；**覆写已存在**页面必须携带读取时的 `base_hash`，且与当前磁盘 hash 一致，否则 `Conflict`（提示走 `read_page` 重读或改用 `update_page`）。
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 ```python
 # tests/core/test_store_write.py
@@ -865,7 +867,7 @@ def test_write_duplicate_name_across_types_rejected(store):
         store.write_page("react", page_md(type="entity", title="React 框架"))
 ```
 
-- [ ] **Step 2: 确认失败。Step 3: 实现**
+- [x] **Step 2: 确认失败。Step 3: 实现**
 
 ```python
 # store.py 内（节选）
@@ -894,7 +896,7 @@ def write_page(self, name: str, content: str, base_hash: str | None = None) -> W
                        content_hash=sha256_text(text), warnings=warnings)
 ```
 
-- [ ] **Step 4: 确认通过（6 passed）。Step 5: Commit** — `git commit -m "feat: write_page with validation, locking, OCC, auto index/log"`
+- [x] **Step 4: 确认通过（6 passed）。Step 5: Commit** — `git commit -m "feat: write_page with validation, locking, OCC, auto index/log"`
 
 ## Task 0.11: WikiStore.update_page（非破坏性段级补丁）
 

@@ -1020,6 +1020,8 @@ def test_changed_sources_detected(wiki_root, tmp_path):
 
 ## Task 0.13: 解析器（MD/PDF）+ Loom 门面 + M0 集成验收
 
+> **✅ 已完成** · 2026-06-08 · commit `e990531` · 4 passed（全量 47 passed），ruff/format 全绿。md/pdf 解析器 + `parse_file` 按扩展名分发；`Loom` 门面装配 paths/store 并暴露 M0 已实现原语（search/graph/lint 留待 M2/M4，未写空壳）。**取舍**：PDF 图片提取暂缓（无测试覆盖、任意图片流重建脆弱）。`__init__` 用 `__all__` 导出 `Loom`。
+
 **目的：** 补齐摄入链路的"解析"环节；把全部已建能力收拢进 `Loom` 门面（架构 §五 的接口形状）；用一条端到端集成测试为 M0 验收。
 
 **Files:**
@@ -1027,7 +1029,7 @@ def test_changed_sources_detected(wiki_root, tmp_path):
 - Modify: `src/loom/__init__.py`
 - Test: `tests/parsers/test_parsers.py`, `tests/test_api_integration.py`
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 ```python
 # tests/parsers/test_parsers.py
@@ -1089,17 +1091,17 @@ def test_full_deterministic_ingest_path(tmp_path):
     assert "RAG 路线之争" in page.body and page.meta.sources == [ref.path]
 ```
 
-- [ ] **Step 2: 确认失败。Step 3: 实现要点**：
+- [x] **Step 2: 确认失败。Step 3: 实现要点**：
   - `parsers/__init__.py`：`PARSERS = {".md": parse_markdown, ".markdown": ..., ".pdf": parse_pdf}`；`parse_file(path, assets_dir)` 按扩展名分发，未知扩展 `ValidationFailed`。
   - `pdf.py`：pdfplumber 逐页 `extract_text()` 拼接（页间 `\n\n`），`metadata = {"pages": n, **(pdf.metadata or {})}`；内嵌图片存 `assets_dir/<pdf名>-img<i>.<ext>`，路径记入 `doc.assets`（图片提取失败仅告警不中断——脏 PDF 常态）。
   - `api.py`：`Loom(root)` 组装 paths/store/hash；暴露架构 §五 全部已实现原语：`register_source/parse/read_page/list_pages/write_page/update_page/get_index/get_schema/get_purpose`（schema/purpose/index 即读取对应文件，不存在抛 `NotFound` 并提示 init）；`Loom.init_wiki = staticmethod(init_wiki)`。`search/find_related/graph/lint_*` 留待 M2/M4（**先不写空壳方法**，YAGNI）。
   - `__init__.py`：`from loom.api import Loom`。
-- [ ] **Step 4: 全量回归** — `uv run pytest -q`，预期全绿（约 35+ tests）。
-- [ ] **Step 5: Commit** — `git commit -m "feat: md/pdf parsers and Loom facade; M0 integration test"`
+- [x] **Step 4: 全量回归** — `uv run pytest -q`，预期全绿（约 35+ tests）。
+- [x] **Step 5: Commit** — `git commit -m "feat: md/pdf parsers and Loom facade; M0 integration test"`
 
 ### M0 验收（DoD）
-- [ ] `uv run pytest -q` 全绿；`uv run ruff check .` 无错误
-- [ ] `test_api_integration.py` 演示了完整确定性链路：init → register → parse → 写互链双页 → 段级更新 → index/log 自动同步
+- [x] `uv run pytest -q` 全绿；`uv run ruff check .` 无错误
+- [x] `test_api_integration.py` 演示了完整确定性链路：init → register → parse → 写互链双页 → 段级更新 → index/log 自动同步
 - [ ] 用 Obsidian 打开一个手工 init 的库，图谱里能看到双页互链（人工 1 分钟检查）
 
 ---

@@ -167,12 +167,14 @@ loom/
 
 ## Task 0.1: 项目脚手架与 CI
 
+> **✅ 已完成** · 2026-06-08 · commit `10e736d` · 验收全绿（`ruff check` / `ruff format --check` / `pytest` → 1 passed）。说明：uv 装到 `~/.local/bin`；`.gitignore` 为既有 GitHub Python 模板，仅追加 `.ruff_cache/`；`conftest.py` 的 `import pytest, yaml` 拆成两行以避开 ruff E401。
+
 **目的：** 建立可安装、可测试、有 CI 的空项目骨架——后续每个任务都在"红绿提交"循环里进行，这是地基。
 
 **Files:**
 - Create: `pyproject.toml`, `src/loom/__init__.py`, `tests/conftest.py`, `tests/test_smoke.py`, `.gitignore`, `.github/workflows/ci.yml`
 
-- [ ] **Step 1: 安装 uv 并初始化项目**
+- [x] **Step 1: 安装 uv 并初始化项目**
 
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh   # 本机未装 uv；装完重新打开 shell 或 source ~/.zshrc
@@ -230,7 +232,7 @@ target-version = "py311"
 
 `.gitignore`：`__pycache__/`, `.venv/`, `*.egg-info/`, `.pytest_cache/`, `.ruff_cache/`, `.idea/`, `dist/`。
 
-- [ ] **Step 2: 写 conftest.py 与冒烟测试**
+- [x] **Step 2: 写 conftest.py 与冒烟测试**
 
 `tests/conftest.py` 用 §0.3 的共享 fixture 全文（`page_md` / `wiki_root` / `loom`）。
 `tests/test_smoke.py`：
@@ -241,9 +243,9 @@ def test_import():
     assert loom.__version__ == "0.1.0"
 ```
 
-- [ ] **Step 3: 跑通** — `uv sync --all-extras && uv run pytest -q`，预期 `1 passed`（conftest 里 fixture 引用的 `loom.api` 是惰性 import，此时不报错）。
+- [x] **Step 3: 跑通** — `uv sync --all-extras && uv run pytest -q`，预期 `1 passed`（conftest 里 fixture 引用的 `loom.api` 是惰性 import，此时不报错）。
 
-- [ ] **Step 4: 写 CI** — `.github/workflows/ci.yml`：
+- [x] **Step 4: 写 CI** — `.github/workflows/ci.yml`：
 
 ```yaml
 name: ci
@@ -260,7 +262,7 @@ jobs:
       - run: uv run pytest -q
 ```
 
-- [ ] **Step 5: Commit** — `git add -A && git commit -m "chore: project scaffolding with uv, pytest, ruff, CI"`
+- [x] **Step 5: Commit** — `git add -A && git commit -m "chore: project scaffolding with uv, pytest, ruff, CI"`
 
 ## Task 0.2: 数据模型、错误类型、时钟
 

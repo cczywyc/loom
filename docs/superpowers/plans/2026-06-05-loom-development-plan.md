@@ -581,13 +581,15 @@ def test_init_refuses_nonempty_dir(tmp_path):
 
 ## Task 0.6: 原子写 + per-file 锁
 
+> **✅ 已完成** · 2026-06-08 · commit `1a324c8` · 3 passed（全量 18 passed），ruff/format 全绿。计划代码逐字采用（含 `thread_local=False` 不可重入锁这一已知坑，锁超时测试通过）；仅把 fsutil 的 `import hashlib, os, tempfile` 拆成三行以过 ruff E401。
+
 **目的：** 写入安全的最底层保证：任何崩溃都不留半截文件；任何并发都不交叉写。这是"工具负责可靠记账"的物理基础，被 store/index/log 全员复用。
 
 **Files:**
 - Create: `src/loom/core/fsutil.py`, `src/loom/core/lock.py`
 - Test: `tests/core/test_fsutil.py`
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 ```python
 # tests/core/test_fsutil.py
@@ -620,8 +622,8 @@ def test_page_lock_times_out_when_held(tmp_path):
 
 注意：`filelock` 同进程默认可重入——实现时每次 `page_lock` 必须新建 `FileLock` 实例并设 `thread_local=False`，否则第三个测试过不了；这是已知坑，测试就是为它立的。
 
-- [ ] **Step 2: 确认失败。**
-- [ ] **Step 3: 实现**
+- [x] **Step 2: 确认失败。**
+- [x] **Step 3: 实现**
 
 ```python
 # src/loom/core/fsutil.py
@@ -667,7 +669,7 @@ def page_lock(loom_dir: Path, name: str, timeout: float = 10.0):
         raise LockTimeout(f"page '{name}' is locked by another writer") from e
 ```
 
-- [ ] **Step 4: 确认通过；Step 5: Commit** — `git commit -m "feat: atomic write and per-file locking"`
+- [x] **Step 4: 确认通过；Step 5: Commit** — `git commit -m "feat: atomic write and per-file locking"`
 
 ## Task 0.7: LogWriter
 

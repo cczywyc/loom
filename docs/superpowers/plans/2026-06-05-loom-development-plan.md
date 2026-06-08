@@ -414,13 +414,15 @@ def dumps_page(page: WikiPage) -> str:
 
 ## Task 0.3: 校验器（命名 / frontmatter / wikilink 提取）
 
+> **✅ 已完成** · 2026-06-08 · commit `19a71fc` · 4 passed（全量 9 passed），ruff/format 全绿。计划的测试与实现一次通过，无偏差。
+
 **目的：** 把"结构不变量"做成纯函数——`write_page` 的强制校验、lint 的检查器都复用这一处实现（DRY）。
 
 **Files:**
 - Create: `src/loom/validate.py`
 - Test: `tests/test_validate.py`
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 ```python
 # tests/test_validate.py
@@ -452,9 +454,9 @@ def test_validate_page_bad_name_is_error():
     assert any("kebab" in p for p in problems)
 ```
 
-- [ ] **Step 2: 确认失败** — `uv run pytest tests/test_validate.py -v` → `ModuleNotFoundError`。
+- [x] **Step 2: 确认失败** — `uv run pytest tests/test_validate.py -v` → `ModuleNotFoundError`。
 
-- [ ] **Step 3: 实现** `src/loom/validate.py`：
+- [x] **Step 3: 实现** `src/loom/validate.py`：
 
 ```python
 import re
@@ -484,8 +486,8 @@ def validate_page(page: WikiPage, known_names: set[str]) -> tuple[list[str], lis
     return problems, warnings
 ```
 
-- [ ] **Step 4: 确认通过** — 预期 4 passed。
-- [ ] **Step 5: Commit** — `git commit -m "feat: structural validators (kebab name, wikilink extraction, page validation)"`
+- [x] **Step 4: 确认通过** — 预期 4 passed。
+- [x] **Step 5: Commit** — `git commit -m "feat: structural validators (kebab name, wikilink extraction, page validation)"`
 
 ## Task 0.4: Config 与 wiki 根发现
 

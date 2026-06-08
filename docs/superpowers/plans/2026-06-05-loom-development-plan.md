@@ -491,13 +491,15 @@ def validate_page(page: WikiPage, known_names: set[str]) -> tuple[list[str], lis
 
 ## Task 0.4: Config 与 wiki 根发现
 
+> **✅ 已完成** · 2026-06-08 · commit `2a674fe` · 3 passed（全量 12 passed），ruff/format 全绿。`LoomPaths` 用 frozen dataclass + `@property`；`find_wiki_root` 走 `start.resolve()` 及 parents 找 `.loom/`。测试里 `;` 连写的一行拆成两行以过 ruff E702。
+
 **目的：** 统一回答"wiki 在哪、各目录叫什么"。CLI 像 git 一样从 cwd 向上找 `.loom/`，免去每条命令传路径。
 
 **Files:**
 - Create: `src/loom/config.py`
 - Test: `tests/test_config.py`
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 ```python
 # tests/test_config.py
@@ -526,9 +528,9 @@ def test_find_wiki_root_not_found_raises(tmp_path):
         find_wiki_root(tmp_path)
 ```
 
-- [ ] **Step 2: 确认失败。**
-- [ ] **Step 3: 实现**（`LoomPaths` 为带 `root: Path` 的 dataclass，各路径用 `@property`；`find_wiki_root(start)` 沿 `start.resolve()` 及其 parents 找第一个含 `.loom/` 的目录，找不到抛 `NotFound("not inside a loom wiki; run 'loom init' first")`）。
-- [ ] **Step 4: 确认通过；Step 5: Commit** — `git commit -m "feat: config paths and wiki root discovery"`
+- [x] **Step 2: 确认失败。**
+- [x] **Step 3: 实现**（`LoomPaths` 为带 `root: Path` 的 dataclass，各路径用 `@property`；`find_wiki_root(start)` 沿 `start.resolve()` 及其 parents 找第一个含 `.loom/` 的目录，找不到抛 `NotFound("not inside a loom wiki; run 'loom init' first")`）。
+- [x] **Step 4: 确认通过；Step 5: Commit** — `git commit -m "feat: config paths and wiki root discovery"`
 
 ## Task 0.5: `init_wiki` 脚手架
 

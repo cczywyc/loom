@@ -266,13 +266,15 @@ jobs:
 
 ## Task 0.2: 数据模型、错误类型、时钟
 
+> **✅ 已完成** · 2026-06-08 · commit `d8f0190` · 5 passed（1 smoke + 4 models），ruff/format 全绿。**修正**：`loads_page` 改用 `parts[2].strip("\n")`（计划为 `lstrip("\n")`）——`dumps_page` 会在 body 末尾补一个换行，仅 `lstrip` 会让 load 非幂等，无法通过"序列化稳定"往返断言。另：pydantic 模型类按单字段一行 + 拆分 import 以过 ruff（E401/E70x）；测试移除未使用的 `WikiPage` 导入（F401）。
+
 **目的：** 定义全工程统一的 pydantic 模型（一份模型同时服务 Python API / CLI `--json` / MCP）、错误层级、可注入时间。这是所有后续任务的类型词汇表。
 
 **Files:**
 - Create: `src/loom/models.py`, `src/loom/errors.py`, `src/loom/clock.py`
 - Test: `tests/test_models.py`
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 ```python
 # tests/test_models.py
@@ -304,9 +306,9 @@ def test_type_dirs_cover_all_page_types():
     assert set(TYPE_DIRS) == {"entity", "concept", "source", "query", "synthesis", "comparison"}
 ```
 
-- [ ] **Step 2: 跑测试确认失败** — `uv run pytest tests/test_models.py -v`，预期 `ModuleNotFoundError: loom.models`。
+- [x] **Step 2: 跑测试确认失败** — `uv run pytest tests/test_models.py -v`，预期 `ModuleNotFoundError: loom.models`。
 
-- [ ] **Step 3: 实现**
+- [x] **Step 3: 实现**
 
 `src/loom/errors.py`：§0.3 的错误模型全文。
 
@@ -407,8 +409,8 @@ def dumps_page(page: WikiPage) -> str:
     return f"---\n{fm}---\n\n{page.body.rstrip()}\n"
 ```
 
-- [ ] **Step 4: 跑测试确认通过** — `uv run pytest tests/test_models.py -v`，预期 4 passed。
-- [ ] **Step 5: Commit** — `git commit -m "feat: data models, error hierarchy, injectable clock"`
+- [x] **Step 4: 跑测试确认通过** — `uv run pytest tests/test_models.py -v`，预期 4 passed。
+- [x] **Step 5: Commit** — `git commit -m "feat: data models, error hierarchy, injectable clock"`
 
 ## Task 0.3: 校验器（命名 / frontmatter / wikilink 提取）
 

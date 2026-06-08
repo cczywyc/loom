@@ -975,13 +975,15 @@ def test_update_set_frontmatter_merges_only_given_keys(store):
 
 ## Task 0.12: ContentHash + register_source
 
+> **✅ 已完成** · 2026-06-08 · commit `842be0f` · 3 passed（全量 43 passed），ruff/format 全绿。hash 档案 `.loom/hashes.json`（atomic 写）；按内容 sha 去重、同名异内容退避 `-N`；`changed_sources` 遍历档案条目重算比对。二进制源用 `write_bytes` 拷贝（不可变 raw、一次性，未走原子写）。
+
 **目的：** 来源进门的关卡：拷入不可变区、SHA256 去重；hash 档案是后续"过期检测"（M4 lint stale、M5 论断级溯源）的数据基础。
 
 **Files:**
 - Create: `src/loom/core/hash.py`
 - Test: `tests/core/test_hash.py`
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 ```python
 # tests/core/test_hash.py
@@ -1014,7 +1016,7 @@ def test_changed_sources_detected(wiki_root, tmp_path):
     assert ch.changed_sources() == [ref.path]
 ```
 
-- [ ] **Step 2: 确认失败。Step 3: 实现要点**：hash 档案存 `.loom/hashes.json`（`{rel_path: sha256}`，经 `atomic_write_text`）；去重靠反查"已有相同 sha256 → 返回已存在路径"；重名异内容加 `-1/-2` 后缀；`register_source` 副作用 `log.append("REGISTER", filename, sha)`。`ContentHash.changed_sources()` 重算 raw/sources 下全部文件 hash 与档案比对。**Step 4: 确认通过。Step 5: Commit** — `git commit -m "feat: source registration with dedupe and change detection"`
+- [x] **Step 2: 确认失败。Step 3: 实现要点**：hash 档案存 `.loom/hashes.json`（`{rel_path: sha256}`，经 `atomic_write_text`）；去重靠反查"已有相同 sha256 → 返回已存在路径"；重名异内容加 `-1/-2` 后缀；`register_source` 副作用 `log.append("REGISTER", filename, sha)`。`ContentHash.changed_sources()` 重算 raw/sources 下全部文件 hash 与档案比对。**Step 4: 确认通过。Step 5: Commit** — `git commit -m "feat: source registration with dedupe and change detection"`
 
 ## Task 0.13: 解析器（MD/PDF）+ Loom 门面 + M0 集成验收
 

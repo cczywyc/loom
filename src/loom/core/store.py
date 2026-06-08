@@ -1,13 +1,17 @@
 from collections.abc import Iterator
 from pathlib import Path
 
+import yaml
+
+from loom import clock
 from loom.config import LoomPaths
 from loom.core.fsutil import atomic_write_text, sha256_file, sha256_text
 from loom.core.index import IndexManager
 from loom.core.lock import page_lock
 from loom.core.log import LogWriter
+from loom.core.sections import apply_patch
 from loom.errors import Conflict, NotFound, ValidationFailed
-from loom.models import TYPE_DIRS, PageSummary, WikiPage, WriteResult, dumps_page, loads_page
+from loom.models import TYPE_DIRS, Patch, PageSummary, WikiPage, WriteResult, dumps_page, loads_page
 from loom.validate import validate_page
 
 
@@ -104,6 +108,39 @@ class WikiStore:
             name=name,
             path=str(path),
             created=created,
+            content_hash=sha256_text(text),
+            warnings=warnings,
+        )
+
+    def update_page(self, name: str, patch: Patch, base_hash: str | None = None) -> WriteResult:
+        """非破坏性段级更新：锁内 read→改→写，天然无丢失更新；可选 base_hash 走 OCC。"""
+        with page_lock(self.paths.loom_dir, name):
+            page = self.read_page(name)  # 缺页抛 NotFound
+            if base_hash is not None and page.content_hash != base_hash:
+                raise Conflict(
+                    f"page '{name}' changed on disk since you read it; re-read and retry"
+                )
+            if patch.op == "set_frontmatter":
+                updates = yaml.safe_load(patch.content) or {}
+                page.meta = page.meta.model_copy(update=updates)
+                detail = "set_frontmatter"
+            else:
+                page.body = apply_patch(page.body, patch)
+                detail = f"{patch.op} section={patch.section}"
+            page.meta.updated = clock.today()  # 工具自动碰 updated
+            problems, warnings = validate_page(page, self.known_names() | {name})
+            if problems:
+                raise ValidationFailed("; ".join(problems))
+            path = self._path_for(page)
+            text = dumps_page(page)
+            atomic_write_text(path, text)
+            self.index.upsert(page)
+            self.log.append("UPDATE", name, detail)
+        return WriteResult(
+            ok=True,
+            name=name,
+            path=str(path),
+            created=False,
             content_hash=sha256_text(text),
             warnings=warnings,
         )

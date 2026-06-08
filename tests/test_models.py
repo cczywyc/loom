@@ -31,3 +31,12 @@ def test_loads_page_missing_required_field_raises():
 
 def test_type_dirs_cover_all_page_types():
     assert set(TYPE_DIRS) == {"entity", "concept", "source", "query", "synthesis", "comparison"}
+
+
+def test_loads_page_accepts_unquoted_yaml_dates():
+    # YAML 把无引号的 2026-06-08 解析成 date 对象；created/updated 需容忍并归一为字符串
+    # （scaffold 的 schema.md 示例正是无引号日期，agent 会照写）。
+    text = "---\ntype: concept\ntitle: X\ncreated: 2026-06-08\nupdated: 2026-06-08\n---\n\nbody"
+    page = loads_page("x", text)
+    assert page.meta.created == "2026-06-08"
+    assert page.meta.updated == "2026-06-08"

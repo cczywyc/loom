@@ -1,8 +1,9 @@
 import re
+from datetime import date, datetime
 from typing import Literal
 
 import yaml
-from pydantic import BaseModel, Field, ValidationError
+from pydantic import BaseModel, Field, ValidationError, field_validator
 
 from loom.errors import ValidationFailed
 
@@ -26,6 +27,16 @@ class PageMeta(BaseModel):
     created: str  # ISO date 字符串，序列化稳定
     updated: str
     tags: list[str] = Field(default_factory=list)
+
+    @field_validator("created", "updated", mode="before")
+    @classmethod
+    def _coerce_date_to_str(cls, v: object) -> object:
+        # YAML 会把无引号的 2026-06-08 解析成 date 对象；归一为 ISO 字符串，保持序列化稳定。
+        if isinstance(v, datetime):
+            return v.date().isoformat()
+        if isinstance(v, date):
+            return v.isoformat()
+        return v
 
 
 class WikiPage(BaseModel):

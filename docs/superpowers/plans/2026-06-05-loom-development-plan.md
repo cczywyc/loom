@@ -266,7 +266,7 @@ jobs:
 
 ## Task 0.2: 数据模型、错误类型、时钟
 
-> **✅ 已完成** · 2026-06-08 · commit `d8f0190` · 5 passed（1 smoke + 4 models），ruff/format 全绿。**修正**：`loads_page` 改用 `parts[2].strip("\n")`（计划为 `lstrip("\n")`）——`dumps_page` 会在 body 末尾补一个换行，仅 `lstrip` 会让 load 非幂等，无法通过"序列化稳定"往返断言。另：pydantic 模型类按单字段一行 + 拆分 import 以过 ruff（E401/E70x）；测试移除未使用的 `WikiPage` 导入（F401）。
+> **✅ 已完成** · 2026-06-08 · commit `d8f0190` · 5 passed（1 smoke + 4 models），ruff/format 全绿。**修正**：`loads_page` 改用 `parts[2].strip("\n")`（计划为 `lstrip("\n")`）——`dumps_page` 会在 body 末尾补一个换行，仅 `lstrip` 会让 load 非幂等，无法通过"序列化稳定"往返断言。另：pydantic 模型类按单字段一行 + 拆分 import 以过 ruff（E401/E70x）；测试移除未使用的 `WikiPage` 导入（F401）。**M0 验证期补丁**（commit `d5d7c28`）：`created`/`updated` 经 `field_validator` 容忍无引号 YAML 日期（`date`/`datetime` → ISO 字符串），否则 agent 按 schema 写 `created: 2026-06-08` 会被拒。
 
 **目的：** 定义全工程统一的 pydantic 模型（一份模型同时服务 Python API / CLI `--json` / MCP）、错误层级、可注入时间。这是所有后续任务的类型词汇表。
 

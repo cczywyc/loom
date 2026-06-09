@@ -4,9 +4,10 @@ from loom.config import LoomPaths
 from loom.core.hash import register_source
 from loom.core.scaffold import init_wiki
 from loom.core.store import WikiStore
-from loom.errors import NotFound
-from loom.models import ParsedDocument, PageSummary, Patch, SourceRef, WikiPage, WriteResult
+from loom.errors import NotFound, ValidationFailed
+from loom.models import Hit, ParsedDocument, PageSummary, Patch, SourceRef, WikiPage, WriteResult
 from loom.parsers import parse_file
+from loom.search.keyword import KeywordSearch
 
 
 def _read_or_notfound(path: Path) -> str:
@@ -18,7 +19,7 @@ def _read_or_notfound(path: Path) -> str:
 class Loom:
     """确定性原语门面（架构 §五）。推理留在宿主 agent；本类只做确定性的活。
 
-    M0 暴露已实现的原语；search / find_related / graph / lint_* 留待 M2/M4。
+    search 已实现（M2 keyword/BM25）；find_related / graph / lint_* 留待 M2/M4。
     """
 
     init_wiki = staticmethod(init_wiki)
@@ -26,6 +27,7 @@ class Loom:
     def __init__(self, root: Path | str):
         self.paths = LoomPaths(root=Path(root))
         self.store = WikiStore(self.paths)
+        self._search: KeywordSearch | None = None  # 惰性构建，写入后失效
 
     def register_source(self, path: Path | str) -> SourceRef:
         return register_source(self.paths, Path(path))
@@ -43,10 +45,23 @@ class Loom:
         return self.store.list_pages(type=type, tag=tag)
 
     def write_page(self, name: str, content: str, base_hash: str | None = None) -> WriteResult:
-        return self.store.write_page(name, content, base_hash=base_hash)
+        res = self.store.write_page(name, content, base_hash=base_hash)
+        self._search = None  # 写入后失效，下次 search 重建索引
+        return res
 
     def update_page(self, name: str, patch: Patch, base_hash: str | None = None) -> WriteResult:
-        return self.store.update_page(name, patch, base_hash=base_hash)
+        res = self.store.update_page(name, patch, base_hash=base_hash)
+        self._search = None  # 写入后失效
+        return res
+
+    def search(self, query: str, mode: str = "keyword", limit: int = 10) -> list[Hit]:
+        if mode != "keyword":
+            raise ValidationFailed(
+                f"search mode '{mode}' not supported yet (only 'keyword'); vector/hybrid 留待 M6"
+            )
+        if self._search is None:
+            self._search = KeywordSearch(self.store)
+        return self._search.search(query, limit=limit)
 
     def get_index(self) -> str:
         return _read_or_notfound(self.paths.index_md)

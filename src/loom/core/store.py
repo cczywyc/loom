@@ -41,6 +41,11 @@ class WikiStore:
     def _path_for(self, page: WikiPage) -> Path:
         return self.paths.wiki_dir / TYPE_DIRS[page.meta.type] / f"{page.name}.md"
 
+    def iter_pages(self) -> Iterator[WikiPage]:
+        """遍历全部页面的完整内容（含 body），供检索/图谱建索引。"""
+        for p in self._iter_page_paths():
+            yield loads_page(p.stem, p.read_text(encoding="utf-8"))
+
     def known_names(self) -> set[str]:
         return {p.stem for p in self._iter_page_paths()}
 

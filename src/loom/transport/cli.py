@@ -6,7 +6,7 @@ import click
 from loom.api import Loom
 from loom.config import find_wiki_root
 from loom.errors import Conflict, LoomError, NotFound, ValidationFailed
-from loom.models import dumps_page
+from loom.models import Patch, dumps_page
 
 
 def _exit_code(err: LoomError) -> int:
@@ -109,3 +109,84 @@ def schema(ctx: click.Context):
 def purpose(ctx: click.Context):
     """打印 purpose.md（目标与演进论点）。"""
     click.echo(_get_loom(ctx).get_purpose())
+
+
+def _read_content(from_file: str | None) -> str:
+    """内容来源：--from-file 优先，否则读 stdin。"""
+    if from_file:
+        return Path(from_file).read_text(encoding="utf-8")
+    return click.get_text_stream("stdin").read()
+
+
+def _emit_write_result(ctx: click.Context, res) -> None:
+    if ctx.obj.get("json"):
+        click.echo(json.dumps(res.model_dump(), ensure_ascii=False))
+    else:
+        action = "created" if res.created else "updated"
+        click.echo(f"{action} {res.name} (hash {res.content_hash[:12]}…)")
+        for w in res.warnings:
+            click.echo(f"  warning: {w}", err=True)
+
+
+@cli.command()
+@click.argument("name")
+@click.option(
+    "--from-file", "from_file", type=click.Path(exists=True), help="内容文件；省略读 stdin"
+)
+@click.option("--base-hash", "base_hash", default=None, help="OCC：覆写已存在页须带读取时的 hash")
+@click.pass_context
+def write(ctx: click.Context, name: str, from_file: str | None, base_hash: str | None):
+    """写整页（新建或覆写）。内容来自 --from-file 或 stdin。"""
+    res = _get_loom(ctx).write_page(name, _read_content(from_file), base_hash=base_hash)
+    _emit_write_result(ctx, res)
+
+
+@cli.command()
+@click.argument("name")
+@click.option("--section", default=None, help="目标小节（add-section 时为新节名）")
+@click.option(
+    "--op",
+    default="replace",
+    type=click.Choice(["replace", "append", "add-section", "set-frontmatter"]),
+)
+@click.option(
+    "--from-file", "from_file", type=click.Path(exists=True), help="内容文件；省略读 stdin"
+)
+@click.option("--base-hash", "base_hash", default=None)
+@click.pass_context
+def update(
+    ctx: click.Context,
+    name: str,
+    section: str | None,
+    op: str,
+    from_file: str | None,
+    base_hash: str | None,
+):
+    """段级更新单页。内容来自 --from-file 或 stdin。"""
+    patch = Patch(op=op.replace("-", "_"), section=section, content=_read_content(from_file))
+    res = _get_loom(ctx).update_page(name, patch, base_hash=base_hash)
+    _emit_write_result(ctx, res)
+
+
+@cli.command()
+@click.argument("path", type=click.Path(exists=True))
+@click.pass_context
+def register(ctx: click.Context, path: str):
+    """把来源文件拷入 raw/sources 并登记（按内容去重）。"""
+    ref = _get_loom(ctx).register_source(path)
+    if ctx.obj.get("json"):
+        click.echo(json.dumps(ref.model_dump(), ensure_ascii=False))
+    else:
+        click.echo(f"{'new' if ref.is_new else 'exists'}: {ref.path}")
+
+
+@cli.command()
+@click.argument("path")
+@click.pass_context
+def parse(ctx: click.Context, path: str):
+    """解析 raw/ 下来源（相对 wiki 根的路径），输出文本（--json 输出完整结构）。"""
+    doc = _get_loom(ctx).parse(path)
+    if ctx.obj.get("json"):
+        click.echo(json.dumps(doc.model_dump(), ensure_ascii=False))
+    else:
+        click.echo(doc.text)

@@ -1,23 +1,8 @@
 import json
 
-import pytest
-from click.testing import CliRunner
-
-from loom.api import Loom
 from loom.transport.cli import cli
-from tests.conftest import page_md
 
-
-@pytest.fixture
-def seeded_wiki(tmp_path):
-    """(runner, root)：先用 CLI init，再用 Loom API 种两页（react 概念页 + karpathy 实体页）。"""
-    root = tmp_path / "kb"
-    runner = CliRunner()
-    runner.invoke(cli, ["init", str(root)])
-    loom = Loom(root)
-    loom.write_page("react", page_md(type="concept", title="ReAct", summary="推理+行动"))
-    loom.write_page("karpathy", page_md(type="entity", title="Karpathy"))
-    return runner, root
+# `seeded_wiki` fixture 由 tests/transport/conftest.py 提供（read / write 测试共用）。
 
 
 def test_read_outputs_full_page(seeded_wiki):

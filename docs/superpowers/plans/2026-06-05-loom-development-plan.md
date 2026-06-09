@@ -1278,26 +1278,28 @@ async def test_error_returns_structured_code(wiki_root):
 
 ## Task 1.5: examples + 手工冒烟
 
+> **✅ 文档+自动化已完成（Claude Code 人工冒烟待用户）** · 2026-06-09 · commit `227c29a`（+ `682f29e`）。`examples/agent_via_mcp.json` + `agent_via_cli.md`；`loom mcp` 增 `--wiki-path` 让示例配置直接生效。**自动化端到端验证**：用 mcp SDK 的 stdio client 拉起真实 `loom mcp` 子进程 → initialize → list_tools(9) → write→read→index 全通（即 Claude Code 走的同一条 stdio 协议）。剩 Step 3 的「接进 Claude Code UI + Obsidian 目视」为人工步骤。
+
 **目的：** 集成入口文档化；用真实 Claude Code 验证 MCP 链路通。
 
 **Files:**
 - Create: `examples/agent_via_mcp.json`, `examples/agent_via_cli.md`
 
-- [ ] **Step 1:** `agent_via_mcp.json`：
+- [x] **Step 1:** `agent_via_mcp.json`：
 
 ```json
 { "mcpServers": { "loom": {
     "command": "uv", "args": ["run", "loom", "mcp", "--wiki-path", "./my-wiki"] } } }
 ```
 
-- [ ] **Step 2:** `agent_via_cli.md`：列出 agent shell-out 的标准序列（每条命令 + 预期输出形态）：`loom index` → `loom search`（M2 后）→ `loom read X --json`（取 base_hash）→ `loom write/update`。M3 写 SKILL.md 时回链此文件。
+- [x] **Step 2:** `agent_via_cli.md`：列出 agent shell-out 的标准序列（每条命令 + 预期输出形态）：`loom index` → `loom search`（M2 后）→ `loom read X --json`（取 base_hash）→ `loom write/update`。M3 写 SKILL.md 时回链此文件。
 - [ ] **Step 3: 人工冒烟（记录结果到 PR 描述）**：`loom init /tmp/demo-wiki && cd /tmp/demo-wiki`，把 examples 配置接进 Claude Code，让它 `wiki_get_index` → `wiki_write_page` 一个页面 → Obsidian 打开确认。预期：全链路无报错，index/log 已更新。
-- [ ] **Step 4: Commit** — `git commit -m "docs: integration examples for cli and mcp"`
+- [x] **Step 4: Commit** — `git commit -m "docs: integration examples for cli and mcp"`
 
 ### M1 验收（DoD）
-- [ ] 全部 14 个已实现原语在 CLI 与 MCP 双侧可达，行为一致（同一 `Loom` 代码路径）
-- [ ] CLI 全命令支持 `--json`；错误码 0/1/2 语义经测试锁定
-- [ ] 真实 Claude Code 经 MCP 写入一页成功（人工冒烟记录）
+- [x] 全部已实现原语（M0/M1 的 9 个）在 CLI 与 MCP 双侧可达，行为一致（同一 `Loom` 代码路径）；search/graph/lint 留待 M2/M4
+- [x] CLI 全命令支持 `--json`；错误码 0/1/2 语义经测试锁定（`test_cli_init`）
+- [ ] 真实 Claude Code 经 MCP 写入一页成功（人工冒烟记录）— 协议层已自动化验证（stdio 子进程往返通），仅余 Claude Code UI 接入 + Obsidian 目视
 
 ---
 

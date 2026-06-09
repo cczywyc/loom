@@ -9,6 +9,7 @@ from loom.errors import NotFound, ValidationFailed
 from loom.models import (
     Graph,
     Hit,
+    PageRef,
     ParsedDocument,
     PageSummary,
     Patch,
@@ -18,6 +19,7 @@ from loom.models import (
 )
 from loom.parsers import parse_file
 from loom.search.keyword import KeywordSearch
+from loom.search.related import find_related as _find_related
 
 
 def _read_or_notfound(path: Path) -> str:
@@ -80,6 +82,13 @@ class Loom:
         if name is None:
             return self._graph.full_graph()
         return self._graph.subgraph(name, depth)
+
+    def find_related(self, text: str, limit: int = 10) -> list[PageRef]:
+        if self._search is None:
+            self._search = KeywordSearch(self.store)
+        if self._graph is None:
+            self._graph = GraphIndex.build(self.store)
+        return _find_related(self._search, self._graph, text, limit=limit)
 
     def get_index(self) -> str:
         return _read_or_notfound(self.paths.index_md)

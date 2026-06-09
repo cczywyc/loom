@@ -48,3 +48,15 @@ def test_index_invalidated_after_write(loom):
 
 def test_no_hits_returns_empty_not_error(loom):
     assert loom.search("绝不存在的词汇组合 xyzzy") == []
+
+
+def test_search_works_on_tiny_two_doc_corpus(loom):
+    # 防回归：2 页语料下 BM25 IDF 易变负/零；IDF 下限钳位须保证真实匹配仍返回且排序正确
+    loom.write_page(
+        "react-pattern", page_md(type="concept", title="ReAct 模式", body="推理与行动。")
+    )
+    loom.write_page(
+        "plan", page_md(type="concept", title="Plan-and-Execute", body="对比 [[react-pattern]]。")
+    )
+    hits = loom.search("ReAct 推理")
+    assert hits and hits[0].name == "react-pattern"

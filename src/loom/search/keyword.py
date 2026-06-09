@@ -4,6 +4,10 @@ from loom.core.store import WikiStore
 from loom.models import Hit, WikiPage
 from loom.search.tokenize import tokenize
 
+# 小语料下 BM25 的 IDF 可能为负/零，会让真实匹配被 score<=0 滤掉、甚至排序反转。
+# 把 IDF 钳到这个小正数下限：保留"稀有词权重更高"的相对关系，又保证任何真实匹配恒为正分。
+_IDF_FLOOR = 0.01
+
 
 class KeywordSearch:
     """内存 BM25 检索：字段加权 title×3 / tags×2 / body×1。按需 build，写入后由 Loom 失效。"""
@@ -25,6 +29,8 @@ class KeywordSearch:
             self._pages.append(page)
             corpus.append(tokens)
         self._bm25 = BM25Okapi(corpus) if corpus else None
+        if self._bm25 is not None:
+            self._bm25.idf = {t: max(idf, _IDF_FLOOR) for t, idf in self._bm25.idf.items()}
 
     def search(self, query: str, limit: int = 10) -> list[Hit]:
         if self._bm25 is None:

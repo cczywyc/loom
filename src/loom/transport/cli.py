@@ -6,6 +6,7 @@ import click
 from loom.api import Loom
 from loom.config import find_wiki_root
 from loom.errors import Conflict, LoomError, NotFound, ValidationFailed
+from loom.models import dumps_page
 
 
 def _exit_code(err: LoomError) -> int:
@@ -68,3 +69,43 @@ def init(ctx: click.Context, path: str, template: str):
 def index(ctx: click.Context):
     """打印 index.md（内容目录）。"""
     click.echo(_get_loom(ctx).get_index())
+
+
+@cli.command()
+@click.argument("name")
+@click.pass_context
+def read(ctx: click.Context, name: str):
+    """读取单页：默认输出完整 markdown；--json 输出结构化页面（含 content_hash）。"""
+    page = _get_loom(ctx).read_page(name)
+    if ctx.obj.get("json"):
+        click.echo(json.dumps(page.model_dump(), ensure_ascii=False))
+    else:
+        click.echo(dumps_page(page))
+
+
+@cli.command(name="list")
+@click.option("--type", "type_", default=None, help="按页面类型过滤")
+@click.option("--tag", default=None, help="按标签过滤")
+@click.pass_context
+def list_(ctx: click.Context, type_: str | None, tag: str | None):
+    """列出页面摘要（可按 --type / --tag 过滤）。"""
+    pages = _get_loom(ctx).list_pages(type=type_, tag=tag)
+    if ctx.obj.get("json"):
+        click.echo(json.dumps([p.model_dump() for p in pages], ensure_ascii=False))
+    else:
+        for p in pages:
+            click.echo(f"[{p.type}] {p.name} — {p.title}")
+
+
+@cli.command()
+@click.pass_context
+def schema(ctx: click.Context):
+    """打印 schema.md（wiki 行为契约）。"""
+    click.echo(_get_loom(ctx).get_schema())
+
+
+@cli.command()
+@click.pass_context
+def purpose(ctx: click.Context):
+    """打印 purpose.md（目标与演进论点）。"""
+    click.echo(_get_loom(ctx).get_purpose())

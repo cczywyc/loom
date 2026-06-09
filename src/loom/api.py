@@ -1,11 +1,21 @@
 from pathlib import Path
 
 from loom.config import LoomPaths
+from loom.core.graph import GraphIndex
 from loom.core.hash import register_source
 from loom.core.scaffold import init_wiki
 from loom.core.store import WikiStore
 from loom.errors import NotFound, ValidationFailed
-from loom.models import Hit, ParsedDocument, PageSummary, Patch, SourceRef, WikiPage, WriteResult
+from loom.models import (
+    Graph,
+    Hit,
+    ParsedDocument,
+    PageSummary,
+    Patch,
+    SourceRef,
+    WikiPage,
+    WriteResult,
+)
 from loom.parsers import parse_file
 from loom.search.keyword import KeywordSearch
 
@@ -28,6 +38,7 @@ class Loom:
         self.paths = LoomPaths(root=Path(root))
         self.store = WikiStore(self.paths)
         self._search: KeywordSearch | None = None  # 惰性构建，写入后失效
+        self._graph: GraphIndex | None = None
 
     def register_source(self, path: Path | str) -> SourceRef:
         return register_source(self.paths, Path(path))
@@ -46,12 +57,12 @@ class Loom:
 
     def write_page(self, name: str, content: str, base_hash: str | None = None) -> WriteResult:
         res = self.store.write_page(name, content, base_hash=base_hash)
-        self._search = None  # 写入后失效，下次 search 重建索引
+        self._search = self._graph = None  # 写入后检索/图谱索引失效，下次按需重建
         return res
 
     def update_page(self, name: str, patch: Patch, base_hash: str | None = None) -> WriteResult:
         res = self.store.update_page(name, patch, base_hash=base_hash)
-        self._search = None  # 写入后失效
+        self._search = self._graph = None  # 写入后失效
         return res
 
     def search(self, query: str, mode: str = "keyword", limit: int = 10) -> list[Hit]:
@@ -62,6 +73,13 @@ class Loom:
         if self._search is None:
             self._search = KeywordSearch(self.store)
         return self._search.search(query, limit=limit)
+
+    def graph(self, name: str | None = None, depth: int = 1) -> Graph:
+        if self._graph is None:
+            self._graph = GraphIndex.build(self.store)
+        if name is None:
+            return self._graph.full_graph()
+        return self._graph.subgraph(name, depth)
 
     def get_index(self) -> str:
         return _read_or_notfound(self.paths.index_md)

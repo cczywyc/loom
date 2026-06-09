@@ -1152,13 +1152,15 @@ def test_command_outside_wiki_exits_1(tmp_path):
 
 ## Task 1.2: 只读命令（read / list / index / schema / purpose）
 
+> **✅ 已完成** · 2026-06-09 · commit `aaf3c48` · 4 passed（全量 55 passed），ruff/format 全绿。`read` 默认输出完整 markdown（`dumps_page`），`--json` 输出 `page.model_dump()`（含 64 位 content_hash）；`list` 函数名 `list_` + `@cli.command(name="list")`，`--type` 形参重命名 `type_`（避开内建名）；`schema`/`purpose`/`index` 直读对应文件。
+
 **目的：** agent 取上下文的高频命令；human 默认输出 + `--json` 双形态。
 
 **Files:**
 - Modify: `src/loom/transport/cli.py`
 - Test: `tests/transport/test_cli_read.py`
 
-- [ ] **Step 1: 写失败测试**（fixture：用 CliRunner 先 `init`，再用 `Loom` API 种两页）
+- [x] **Step 1: 写失败测试**（fixture：用 CliRunner 先 `init`，再用 `Loom` API 种两页）
 
 ```python
 def test_read_outputs_full_page(seeded_wiki):       # seeded_wiki: (runner, root) 含 react 页
@@ -1182,8 +1184,8 @@ def test_read_missing_page_exit_1(seeded_wiki):
     assert runner.invoke(cli, ["--wiki-path", str(root), "read", "nope"]).exit_code == 1
 ```
 
-- [ ] **Step 2–4: 红→实现→绿**。命令清单：`read NAME`、`list [--type] [--tag]`、`index`、`schema`、`purpose`。
-- [ ] **Step 5: Commit** — `git commit -m "feat: cli read commands"`
+- [x] **Step 2–4: 红→实现→绿**。命令清单：`read NAME`、`list [--type] [--tag]`、`index`、`schema`、`purpose`。
+- [x] **Step 5: Commit** — `git commit -m "feat: cli read commands"`
 
 ## Task 1.3: 写命令（write / update / register / parse）
 

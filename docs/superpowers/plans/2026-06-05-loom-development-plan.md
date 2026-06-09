@@ -1110,13 +1110,15 @@ def test_full_deterministic_ingest_path(tmp_path):
 
 ## Task 1.1: CLI 骨架 + `loom init` + 全局错误处理
 
+> **✅ 已完成** · 2026-06-09 · commit `7440004` · 3 passed（全量 51 passed），ruff/format 全绿，`uv run loom` 实测可用。**实现取舍**：错误出口用覆写 `click.Group.invoke` 集中处理（替代每命令 `@handle_errors` 装饰器，避开 `pass_context` 叠加坑，行为一致：捕获 `LoomError` → `--json` 错误 JSON + 退出码 2/1）。为通过"outside wiki → exit 1"测试，顺带实现了最小 `index` 命令（1.2 完善）。
+
 **目的：** 建立 click 应用骨架：wiki 根自动发现、`--json` 全局开关、错误→退出码映射（0/1/2）。所有后续命令只填业务，不再处理这些横切面。
 
 **Files:**
 - Create: `src/loom/transport/cli.py`, `src/loom/transport/__init__.py`
 - Test: `tests/transport/test_cli_init.py`
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 ```python
 # tests/transport/test_cli_init.py
@@ -1142,11 +1144,11 @@ def test_command_outside_wiki_exits_1(tmp_path):
     assert r.exit_code == 1
 ```
 
-- [ ] **Step 2: 确认失败。Step 3: 实现要点**：
+- [x] **Step 2: 确认失败。Step 3: 实现要点**：
   - `@click.group()` + `@click.option("--wiki-path")` + `@click.option("--json", "as_json", is_flag=True)`；`ctx.obj` 惰性持有 `Loom`（`init` 命令不需要）。
   - 统一错误出口：group 级 `result_callback` 不够，用装饰器 `@handle_errors` 包每个命令——捕获 `LoomError`，`--json` 输出错误 JSON，退出码 `2`（ValidationFailed/Conflict）或 `1`（其他）。
   - `loom init PATH [--template blank]` → `Loom.init_wiki`。
-- [ ] **Step 4: 确认通过。Step 5: Commit** — `git commit -m "feat: cli skeleton with init, json output, exit codes"`
+- [x] **Step 4: 确认通过。Step 5: Commit** — `git commit -m "feat: cli skeleton with init, json output, exit codes"`
 
 ## Task 1.2: 只读命令（read / list / index / schema / purpose）
 

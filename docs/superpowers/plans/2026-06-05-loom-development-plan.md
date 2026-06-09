@@ -1307,13 +1307,15 @@ async def test_error_returns_structured_code(wiki_root):
 
 ## Task 2.1: 中英混排分词器
 
+> **✅ 已完成** · 2026-06-09 · commit `c0263a6` · 3 passed（全量 64 passed），ruff/format 全绿。`tokenize` = jieba `cut_for_search`（中文切词）+ 英数小写 + 丢标点；计划代码逐字采用。实测 "状态管理是 LangGraph 的核心" → `['状态','管理','是','langgraph','的','核心']`。注：jieba 自身 `finalseg` 有一个 `SyntaxWarning`（第三方代码，非本项目，不影响 CI）。
+
 **目的：** 检索质量的根。知识库以中文为主，BM25 没有合理分词等于零——这是本项目相对"朴素 BM25"最重要的本地化决策。
 
 **Files:**
 - Create: `src/loom/search/tokenize.py`, `src/loom/search/__init__.py`
 - Test: `tests/search/test_tokenize.py`
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 ```python
 from loom.search.tokenize import tokenize
@@ -1333,7 +1335,7 @@ def test_deterministic():
     assert tokenize(text) == tokenize(text)
 ```
 
-- [ ] **Step 2: 确认失败。Step 3: 实现**：
+- [x] **Step 2: 确认失败。Step 3: 实现**：
 
 ```python
 import re
@@ -1355,7 +1357,7 @@ def tokenize(text: str) -> list[str]:
 
 jieba 首次加载词典约 0.5–1s：模块级懒加载即可（CLI 冷启动可接受，MCP 常驻摊销——架构 §六 预言的差异在此应验）。
 
-- [ ] **Step 4: 确认通过。Step 5: Commit** — `git commit -m "feat: cjk-aware tokenizer for search"`
+- [x] **Step 4: 确认通过。Step 5: Commit** — `git commit -m "feat: cjk-aware tokenizer for search"`
 
 ## Task 2.2: BM25 KeywordSearch + `search` 原语
 

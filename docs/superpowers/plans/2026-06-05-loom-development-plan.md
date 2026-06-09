@@ -1227,6 +1227,8 @@ def test_parse_outputs_text(seeded_wiki, tmp_path):
 
 ## Task 1.4: MCP server（FastMCP，零推理薄壳）
 
+> **✅ 已完成** · 2026-06-09 · commit `158c304` · 3 passed（含 2 个 `@pytest.mark.anyio` 进程内异步测试；全量 61 passed），ruff/format 全绿。`build_server` 注册 9 个工具一一映射原语，统一 `try/except LoomError` 返回结构化错误；`loom mcp` stdio 子命令（惰性 import MCP SDK）。**按现行 mcp SDK 适配**：进程内 client 是单个 `ClientSession`（非 `(client, _)` 元组，且自动 initialize）；加 `anyio_backend` fixture 跑异步测试；`wiki_update_page` 的 `op` 直接用下划线（`add_section`/`set_frontmatter`，对齐 `Patch.op`）。
+
 **目的：** 第二条传输：常驻进程（暖索引、文件锁的天然串行化点），工具自带 schema 让 agent 零学习成本。每个工具一一映射原语，docstring 写给 agent 看。
 
 **Files:**
@@ -1236,7 +1238,7 @@ def test_parse_outputs_text(seeded_wiki, tmp_path):
 
 > 实现前先用 context7 查 `mcp` Python SDK 当前版本的 FastMCP 用法（工具注册、进程内测试客户端 API 演进较快，以现查文档为准；下面代码是意图基准）。
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 ```python
 # tests/transport/test_mcp.py
@@ -1268,11 +1270,11 @@ async def test_error_returns_structured_code(wiki_root):
     ...  # call wiki_read_page name="nope" → 结果含 "NOT_FOUND"（工具内 catch LoomError 返回 {"ok":false,"error":...}，不抛裸异常）
 ```
 
-- [ ] **Step 2: 确认失败。Step 3: 实现要点**：
+- [x] **Step 2: 确认失败。Step 3: 实现要点**：
   - `build_server(wiki_path) -> FastMCP`：闭包持 `Loom` 实例；逐一注册工具，函数体就一行调用 + `model_dump()`；统一 `try/except LoomError` 返回结构化错误（agent 看 code 决定重读还是放弃）。
   - 每个 docstring 必须说清：何时用、参数含义、返回什么。例如 `wiki_write_page`: *"Create a wiki page. For existing pages you MUST pass base_hash from a prior wiki_read_page, or use wiki_update_page for section edits."*
   - `loom mcp [--wiki-path P]` 子命令：`build_server(...).run(transport="stdio")`。
-- [ ] **Step 4: 确认通过。Step 5: Commit** — `git commit -m "feat: mcp server exposing primitives as tools"`
+- [x] **Step 4: 确认通过。Step 5: Commit** — `git commit -m "feat: mcp server exposing primitives as tools"`
 
 ## Task 1.5: examples + 手工冒烟
 

@@ -1189,13 +1189,15 @@ def test_read_missing_page_exit_1(seeded_wiki):
 
 ## Task 1.3: 写命令（write / update / register / parse）
 
+> **✅ 已完成** · 2026-06-09 · commit `b81566f` · 3 passed（全量 58 passed），ruff/format 全绿，实测 write(stdin)→update→read 链路通。`_read_content` 统一 `--from-file`/stdin；CLI `--op` 用连字符（add-section/set-frontmatter）经 `replace("-","_")` 映射到 `Patch.op` 下划线；`seeded_wiki` 提到 `tests/transport/conftest.py` 共用，react 加「要点」节。
+
 **目的：** 打通 agent 经 shell 的完整写路径；`--base-hash`/`--from-file`/stdin 是 agent 实际操作的关键人体工学。
 
 **Files:**
 - Modify: `src/loom/transport/cli.py`
 - Test: `tests/transport/test_cli_write.py`
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 ```python
 def test_write_from_file_then_conflict_without_base_hash(seeded_wiki, tmp_path):
@@ -1220,8 +1222,8 @@ def test_parse_outputs_text(seeded_wiki, tmp_path):
     assert "你好" in r.output
 ```
 
-- [ ] **Step 2–4: 红→实现→绿**。命令：`write NAME (--from-file F | stdin) [--base-hash H]`、`update NAME --section S [--op replace|append|add-section|set-frontmatter] (--from-file|stdin)`、`register PATH`、`parse RAW_REL_PATH`。
-- [ ] **Step 5: Commit** — `git commit -m "feat: cli write commands"`
+- [x] **Step 2–4: 红→实现→绿**。命令：`write NAME (--from-file F | stdin) [--base-hash H]`、`update NAME --section S [--op replace|append|add-section|set-frontmatter] (--from-file|stdin)`、`register PATH`、`parse RAW_REL_PATH`。
+- [x] **Step 5: Commit** — `git commit -m "feat: cli write commands"`
 
 ## Task 1.4: MCP server（FastMCP，零推理薄壳）
 

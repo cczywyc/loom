@@ -1412,6 +1412,8 @@ def test_no_hits_returns_empty_not_error(loom):
 
 ## Task 2.3: GraphIndex + `graph` 原语
 
+> **✅ 已完成** · 2026-06-09 · commit `ad0425a` · 4 passed（全量 72 passed），ruff/format 全绿。`GraphIndex.build` 由 `extract_wikilinks` 建出边/入边、坏链单列；`subgraph(name, depth)` 沿**出边+入边** BFS；`orphans()` = 无入无出。`Loom.graph()` 与 search 同样写后失效缓存。
+
 **目的：** 把 `[[wikilink]]` 编织的网变成可查询的图——`graph` 给 agent 看邻域，孤儿/坏链检测（M4）和 find_related（2.4）都吃这份数据。
 
 **Files:**
@@ -1419,7 +1421,7 @@ def test_no_hits_returns_empty_not_error(loom):
 - Modify: `src/loom/api.py`
 - Test: `tests/core/test_graph.py`
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 ```python
 from loom.core.graph import GraphIndex
@@ -1456,8 +1458,8 @@ def test_orphans_and_broken_links(loom):
     assert gi.broken_links() == [("b", "ghost")]            # 指向不存在页
 ```
 
-- [ ] **Step 2: 确认失败。Step 3: 实现要点**：`GraphIndex.build(store)` 遍历页面 `extract_wikilinks` 建 `out: dict[str, set[str]]` + 反向 `inc`；边仅保留目标存在的（坏链单列 `broken_links()`）；`subgraph(name, depth)` 沿**出边+入边**做 BFS；`orphans()` = 无入边且无出边。`Loom.graph()` 同 search 一样写后失效缓存。
-- [ ] **Step 4: 确认通过。Step 5: Commit** — `git commit -m "feat: wikilink graph index with subgraph/orphan/broken-link queries"`
+- [x] **Step 2: 确认失败。Step 3: 实现要点**：`GraphIndex.build(store)` 遍历页面 `extract_wikilinks` 建 `out: dict[str, set[str]]` + 反向 `inc`；边仅保留目标存在的（坏链单列 `broken_links()`）；`subgraph(name, depth)` 沿**出边+入边**做 BFS；`orphans()` = 无入边且无出边。`Loom.graph()` 同 search 一样写后失效缓存。
+- [x] **Step 4: 确认通过。Step 5: Commit** — `git commit -m "feat: wikilink graph index with subgraph/orphan/broken-link queries"`
 
 ## Task 2.4: `find_related`
 

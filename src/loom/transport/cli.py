@@ -190,3 +190,14 @@ def parse(ctx: click.Context, path: str):
         click.echo(json.dumps(doc.model_dump(), ensure_ascii=False))
     else:
         click.echo(doc.text)
+
+
+@cli.command()
+@click.pass_context
+def mcp(ctx: click.Context):
+    """以 stdio 运行 MCP server（常驻进程；暖索引、文件锁的天然串行化点）。"""
+    from loom.transport.mcp import build_server  # 惰性导入：非 mcp 命令无需加载 MCP SDK
+
+    wiki_path = ctx.obj.get("wiki_path")
+    root = Path(wiki_path) if wiki_path else find_wiki_root(Path.cwd())
+    build_server(root).run(transport="stdio")

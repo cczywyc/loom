@@ -1801,6 +1801,8 @@ def test_clean_wiki_reports_ok(loom):
 
 ## Task 4.2: `lint --fix`（安全修复集）
 
+> **✅ 已完成** · 2026-06-10 · commit `6aae313` · 5 passed（全量 98 passed），ruff/format 全绿。CLI 实测：`lint --fix` 修了 index 漂移，orphan/broken-link 仍只报告（不在安全集）。安全集仅三类：① index.md 与实际页失同步→重算；② 缺 created/updated→从 mtime 回填（仅"补完即合法"才修，缺 title 等不碰）；③ source_hashes 缺失→按 raw 当前 hash 回填（走 update_page 复用锁/原子写）。每笔记 FIX 日志。新增 `loom lint --structural [--fix]` 命令；另补了 dates/source_hashes 两个计划未给的测试。
+
 **目的：** 机械问题里**绝对安全**的子集自动修，其余只报告并给出建议命令——绝不替 agent 做判断、绝不做破坏性改名。
 
 安全集（仅此三类，超出即只报告）：① index.md 与实际页面失同步 → 重算补齐/删除条目；② frontmatter 缺 `created/updated` → 从文件 mtime 回填；③ `source_hashes` 缺失但 `sources` 存在 → 按当前 raw 文件 hash 回填。
@@ -1809,7 +1811,7 @@ def test_clean_wiki_reports_ok(loom):
 - Create: `src/loom/lint/fix.py`；Modify: `cli.py`（`loom lint --structural [--fix]`）
 - Test: `tests/lint/test_fix.py`
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 ```python
 def test_fix_resyncs_index(loom, wiki_root):
@@ -1836,7 +1838,7 @@ def test_fix_never_touches_page_bodies(loom, wiki_root):
     assert (wiki_root / "wiki/concepts/a.md").read_text() == before
 ```
 
-- [ ] **Step 2–4: 红→实现→绿**（每笔修复 `log.append("FIX", ...)`；frontmatter 回填走 `update_page(set_frontmatter)` 复用锁与原子写）。**Step 5: Commit** — `git commit -m "feat: lint --fix for safe mechanical repairs"`
+- [x] **Step 2–4: 红→实现→绿**（每笔修复 `log.append("FIX", ...)`；frontmatter 回填走 `update_page(set_frontmatter)` 复用锁与原子写）。**Step 5: Commit** — `git commit -m "feat: lint --fix for safe mechanical repairs"`
 
 ## Task 4.3: `lint_candidates`（语义可疑对象启发式）
 

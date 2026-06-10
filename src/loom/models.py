@@ -115,6 +115,23 @@ class Graph(BaseModel):
     edges: list[GraphEdge]
 
 
+class Finding(BaseModel):
+    kind: Literal[
+        "orphan", "broken-link", "bad-frontmatter", "bad-name", "stale", "duplicate-title"
+    ]
+    page: str
+    message: str
+    fixable: bool = False
+
+
+class LintReport(BaseModel):
+    findings: list[Finding]
+
+    @property
+    def ok(self) -> bool:
+        return not self.findings
+
+
 _FM_DELIM = re.compile(r"^---\s*$", re.M)
 
 

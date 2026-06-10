@@ -20,9 +20,14 @@ class GraphIndex:
 
     @classmethod
     def build(cls, store: WikiStore) -> "GraphIndex":
+        return cls.from_pages(store.iter_pages())
+
+    @classmethod
+    def from_pages(cls, page_iter) -> "GraphIndex":
+        """从一组已解析页面建图（lint 用它只喂解析成功的页，避开坏 frontmatter）。"""
         pages: dict[str, WikiPage] = {}
         raw: dict[str, list[str]] = {}
-        for page in store.iter_pages():
+        for page in page_iter:
             pages[page.name] = page
             raw[page.name] = extract_wikilinks(page.body)
         out: dict[str, set[str]] = {name: set() for name in pages}

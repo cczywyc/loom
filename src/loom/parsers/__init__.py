@@ -2,6 +2,7 @@ from pathlib import Path
 
 from loom.errors import ValidationFailed
 from loom.models import ParsedDocument
+from loom.parsers.html import parse_html
 from loom.parsers.markdown import parse_markdown
 from loom.parsers.pdf import parse_pdf
 
@@ -9,6 +10,8 @@ PARSERS = {
     ".md": parse_markdown,
     ".markdown": parse_markdown,
     ".pdf": parse_pdf,
+    ".html": parse_html,
+    ".htm": parse_html,
 }
 
 

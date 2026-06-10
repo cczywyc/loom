@@ -1539,6 +1539,8 @@ def test_warm_search_under_200ms_on_200_pages(loom):
 
 ## Task 3.1: 三套模板 + `init --template`
 
+> **✅ 已完成** · 2026-06-09 · commit `aef0fb9` · 4 passed（全量 85 passed），ruff/format 全绿。三套模板（blank/research/personal）各含 `schema.md`+`purpose.md`；`scaffold` 改用 `importlib.resources` 读取、删除内置字符串；未知模板抛 `ValidationFailed`。**实现取舍**：模板放包内 `src/loom/templates/`（非仓库根 + force-include）——这样 editable（测试）与 wheel 都能经 `importlib.resources` 读到；已构建 wheel 验证 6 个 .md 均打包。CLI `loom init --template research/personal` 实测渲染出各自附加节。
+
 **目的：** schema.md 是"让 agent 守纪律"的行为契约。三套模板 = 三种典型场景的开箱即用约定；blank 是最小完备集。
 
 **Files:**
@@ -1546,7 +1548,7 @@ def test_warm_search_under_200ms_on_200_pages(loom):
 - Modify: `src/loom/core/scaffold.py`（从 templates/ 目录读取，打包进 wheel：pyproject 加 `[tool.hatch.build.targets.wheel].force-include`）
 - Test: `tests/core/test_templates.py`
 
-- [ ] **Step 1: 写 blank 模板（全文，另两套在此骨架上扩展）**
+- [x] **Step 1: 写 blank 模板（全文，另两套在此骨架上扩展）**
 
 `templates/blank/schema.md`：
 
@@ -1602,7 +1604,7 @@ def test_warm_search_under_200ms_on_200_pages(loom):
 
 `research/` 在 blank 基础上：schema 增加「论文页必须有 ## 方法 / ## 结论 / ## 局限 三节」「comparison 页强制双向链接被比较项」；purpose 预置"研究问题/相关工作图谱"小节。`personal/` 增加：「日记/灵感进 sources，每周 lint 后由 agent 提炼 synthesis」「tags 用生活领域词表（health/career/reading…）」。两套各 ~15 行增量，实写不留 TBD。
 
-- [ ] **Step 2: 写失败测试**：
+- [x] **Step 2: 写失败测试**：
 
 ```python
 import pytest
@@ -1621,7 +1623,7 @@ def test_unknown_template_raises(tmp_path):
         Loom.init_wiki(tmp_path / "kb", template="nope")
 ```
 
-- [ ] **Step 3: 实现**（scaffold 改为 `importlib.resources` 读 templates；Task 0.5 内置字符串删除）。**Step 4: 确认通过 + 全量回归。Step 5: Commit** — `git commit -m "feat: blank/research/personal templates"`
+- [x] **Step 3: 实现**（scaffold 改为 `importlib.resources` 读 templates；Task 0.5 内置字符串删除）。**Step 4: 确认通过 + 全量回归。Step 5: Commit** — `git commit -m "feat: blank/research/personal templates"`
 
 ## Task 3.2: SKILL.md（随工具分发的工作流配方）
 

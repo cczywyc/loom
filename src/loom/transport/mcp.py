@@ -8,7 +8,7 @@ from loom.api import Loom
 from loom.errors import LoomError
 from loom.models import Patch
 
-# 与 build_server 注册的工具一一对应（M0+M1 已实现的原语；search/graph/lint 留待 M2/M4）。
+# 与 build_server 注册的工具一一对应（M0–M4 原语）。
 TOOL_NAMES = [
     "wiki_register_source",
     "wiki_parse",
@@ -22,6 +22,8 @@ TOOL_NAMES = [
     "wiki_search",
     "wiki_find_related",
     "wiki_graph",
+    "wiki_lint_structural",
+    "wiki_lint_candidates",
 ]
 
 
@@ -103,5 +105,15 @@ def build_server(wiki_path: Path | str) -> FastMCP:
     def wiki_graph(name: str | None = None, depth: int = 1):
         """Wikilink graph. With name: its depth-N neighborhood; without: the full graph. Returns nodes + edges."""
         return _result(lambda: loom.graph(name, depth=depth).model_dump())
+
+    @server.tool(name="wiki_lint_structural")
+    def wiki_lint_structural():
+        """Structural lint: orphan/broken-link/bad-frontmatter/bad-name/stale/duplicate-title. Never raises. Returns {findings:[{kind,page,message,fixable}]}. These are definite structural problems to handle."""
+        return _result(lambda: loom.lint_structural().model_dump())
+
+    @server.tool(name="wiki_lint_candidates")
+    def wiki_lint_candidates():
+        """Surface semantic-suspect candidates (possible-contradiction/sparse-area/stale-cluster) for YOU to judge — the tool surfaces, you decide. Returns [{kind,pages,reason}]; read the pages before concluding."""
+        return _result(lambda: [c.model_dump() for c in loom.lint_candidates()])
 
     return server

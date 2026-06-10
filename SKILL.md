@@ -25,7 +25,7 @@ loom 工具本身不含推理：解析、检索、存储、结构校验、index/
 7. 为来源本身建一页 `source` 类型摘要页，`sources` 回指 raw 路径。
 8. **[你]** 若新信息与已有页面矛盾：在双方页面各 `loom update --section 争议 --op append` 一节，用 ⚠️ 标注双方论点与来源。
 9. **[你]** 评估 `purpose.md`「演进中的论点」是否被强化/动摇；需要则 `loom update purpose ...`，避免 purpose 变成没人更新的死文件。
-10. 收尾自检：`loom lint --structural`（M4 后可用），处理报出的机械问题（坏链、孤儿页、缺字段、过期）。
+10. 收尾自检：`loom lint --structural --fix --json` → 先自动修安全子集（index/日期/source_hashes），再处理 `report.findings` 里剩下的机械问题（坏链、孤儿页、缺字段、过期）。
 
 ## Query（回答问题）
 
@@ -37,9 +37,9 @@ loom 工具本身不含推理：解析、检索、存储、结构校验、index/
 
 ## Lint（体检）
 
-1. `loom lint --structural --json`（M4 后可用）→ 机械问题照单处理：坏链补页或删链、孤儿页补链接、缺字段补全、过期页标记复查。
-2. `loom lint --candidates --json`（M4 后可用）→ 对每个浮现的可疑对象，`loom read` 相关页，**[你]** 判断是否真矛盾 / 真空白。
-3. **[你]** 给用户一份体检报告：修了什么、确认了哪些矛盾、建议接下来读什么。
+1. `loom lint --structural --fix --json` → 先自动修安全子集（index 失同步 / 缺 created·updated / 缺 source_hashes，各记一条 `FIX` 日志），再返回 `report.findings[]`，每条 `{kind, page, message, fixable}`；`kind` ∈ orphan / broken-link / bad-frontmatter / bad-name / stale / duplicate-title。剩下的照单处理：坏链补页或删链、孤儿页补链接、bad-name 改名重建、stale 页 `loom read` 后复查更新。
+2. `loom lint --candidates --json` → `candidates[]`，每条 `{kind, pages, reason}`；`kind` ∈ possible-contradiction / sparse-area / stale-cluster。**[你]** 对每条 `loom read` 相关页，判断是否真矛盾 / 真空白——工具只浮现、给 reason，结论你下（密链库里 possible-contradiction 可能偏多，多为共享 hub 页，按 reason 快速甄别）。
+3. **[你]** 给用户一份体检报告：自动修了什么、确认/排除了哪些矛盾、哪片知识该补链接、建议接下来读什么。
 
 ---
 

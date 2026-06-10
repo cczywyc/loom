@@ -50,3 +50,27 @@ async def test_error_returns_structured_code(wiki_root):
     async with connect(server._mcp_server) as client:
         res = await client.call_tool("wiki_read_page", {"name": "nope"})
         assert "NOT_FOUND" in str(res)
+
+
+M4_TOOLS = {"wiki_lint_structural", "wiki_lint_candidates"}
+
+
+def test_m4_lint_tools_exposed(wiki_root):
+    build_server(wiki_root)
+    assert M4_TOOLS <= set(TOOL_NAMES)
+
+
+@pytest.mark.anyio
+async def test_lint_via_mcp(wiki_root):
+    from mcp.shared.memory import create_connected_server_and_client_session as connect
+
+    server = build_server(wiki_root)
+    async with connect(server._mcp_server) as client:
+        await client.call_tool(
+            "wiki_write_page",
+            {"name": "a", "content": page_md(type="concept", title="A", body="[[ghost]]")},
+        )
+        res = await client.call_tool("wiki_lint_structural", {})
+        assert "broken-link" in str(res)  # 坏链被报出
+        res = await client.call_tool("wiki_lint_candidates", {})
+        assert "sparse-area" in str(res)  # 单页孤立 → 稀疏区候选

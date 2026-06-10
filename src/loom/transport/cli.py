@@ -237,28 +237,48 @@ def graph(ctx: click.Context, name: str | None, depth: int):
 
 
 @cli.command()
-@click.option("--structural", is_flag=True, help="结构检查（目前唯一模式）")
+@click.option(
+    "--structural", is_flag=True, help="结构检查（孤儿/坏链/坏 frontmatter/坏名/过期/重名）"
+)
+@click.option("--candidates", "candidates_", is_flag=True, help="浮现语义可疑对象，交你判断")
 @click.option("--fix", is_flag=True, help="先自动修复安全子集（index/日期/source_hashes），再报告")
 @click.pass_context
-def lint(ctx: click.Context, structural: bool, fix: bool):
-    """结构体检：孤儿/坏链/坏 frontmatter/坏名/过期/重名；--fix 自动修安全子集。"""
+def lint(ctx: click.Context, structural: bool, candidates_: bool, fix: bool):
+    """wiki 体检。--structural 报机械问题；--candidates 浮现可疑对象；--fix 修安全子集。"""
     loom = _get_loom(ctx)
+    if not structural and not candidates_:
+        structural = True  # 未指定模式时默认结构检查
     fixed: list[str] = []
     if fix:
         from loom.lint.fix import apply_fixes
 
         fixed = apply_fixes(loom)
-    report = loom.lint_structural()
+    report = loom.lint_structural() if structural else None
+    cands = loom.lint_candidates() if candidates_ else None
     if ctx.obj.get("json"):
-        click.echo(json.dumps({"fixed": fixed, "report": report.model_dump()}, ensure_ascii=False))
+        payload: dict = {}
+        if fix:
+            payload["fixed"] = fixed
+        if report is not None:
+            payload["report"] = report.model_dump()
+        if cands is not None:
+            payload["candidates"] = [c.model_dump() for c in cands]
+        click.echo(json.dumps(payload, ensure_ascii=False))
     else:
         for desc in fixed:
             click.echo(f"fixed: {desc}")
-        if report.ok:
-            click.echo("structural lint: ok ✅")
-        else:
-            for f in report.findings:
-                click.echo(f"  [{f.kind}] {f.page} — {f.message}")
+        if report is not None:
+            if report.ok:
+                click.echo("structural lint: ok ✅")
+            else:
+                for f in report.findings:
+                    click.echo(f"  [{f.kind}] {f.page} — {f.message}")
+        if cands is not None:
+            if not cands:
+                click.echo("candidates: none")
+            else:
+                for c in cands:
+                    click.echo(f"  [{c.kind}] {', '.join(c.pages)} — {c.reason}")
 
 
 @cli.command()

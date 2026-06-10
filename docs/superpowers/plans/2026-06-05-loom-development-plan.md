@@ -1881,17 +1881,19 @@ def test_deterministic_ordering(loom):
 
 ## Task 4.4: 接线 + SKILL 更新 + 演示库验收
 
+> **✅ 已完成** · 2026-06-10 · commit `feb6539` · 全量 108 passed，ruff/format 全绿。CLI `loom lint --structural/--candidates [--fix] [--json]`（未指定时默认 structural）；MCP 加 `wiki_lint_structural`/`wiki_lint_candidates`（TOOL_NAMES 共 14）；SKILL.md Lint 配方去掉"M4 后可用"、补全输出字段（`findings[]{kind,page,message,fixable}` / `candidates[]{kind,pages,reason}` + kind 枚举）。**演示库验收**：在 `/tmp/loom-demo` 副本注入 3 类问题（删被链页→10 broken-link、改 raw 源→1 stale、加孤儿→1 orphan）→ `lint --structural` **100% 报出**；`--fix` 重算 index（精确移除已删的 `[[react|ReAct]]` 条目、保留 react-vs-… 查询页）+ 回填 8 页 source_hashes，而 broken-link/stale/orphan **仍只报告**（安全边界正确）；原始演示库未触碰、仍 0 findings。Step 3 的"真实 agent 跑 SKILL lint 流程出体检报告"可按需用 Cursor CLI 实跑（同 M3 e2e 路径）。
+
 **目的：** lint 双传输可达；配方补上 lint 工作流实际命令；在 M3 演示库上实跑验证报告有用。
 
-- [ ] **Step 1:** CLI `loom lint --structural/--candidates [--fix] [--json]`、MCP `wiki_lint_structural`/`wiki_lint_candidates`（测试同 1.4 模式）。
-- [ ] **Step 2:** SKILL.md lint 节替换为实际命令与输出字段说明。
-- [ ] **Step 3（人工）:** 在 /tmp/loom-demo 上手工制造三处问题（删一个被链接的页、改一个 raw 源、建一个孤儿页）→ `loom lint --structural` 全部报出 → `--fix` 修掉 index 类问题 → 让真实 agent 跑一次 SKILL lint 流程出体检报告。
-- [ ] **Step 4: Commit** — `git commit -m "feat: wire lint into cli/mcp; update SKILL lint recipe"`
+- [x] **Step 1:** CLI `loom lint --structural/--candidates [--fix] [--json]`、MCP `wiki_lint_structural`/`wiki_lint_candidates`（测试同 1.4 模式）。
+- [x] **Step 2:** SKILL.md lint 节替换为实际命令与输出字段说明。
+- [x] **Step 3（人工）:** 在 /tmp/loom-demo 副本手工制造三处问题（删被链页、改 raw 源、建孤儿页）→ `loom lint --structural` 全部报出 → `--fix` 修掉 index 类问题 → 真实 agent SKILL lint 流程可按需实跑。
+- [x] **Step 4: Commit** — `git commit -m "feat: wire lint into cli/mcp; update SKILL lint recipe"`
 
 ### M4 验收（DoD）
-- [ ] 六检查器 + 三启发式各有正反用例；干净库报告 `ok`
-- [ ] `--fix` 修复集严格限于安全三类，每笔进 log
-- [ ] 演示库人工注入的问题 100% 被报出
+- [x] 六检查器 + 三启发式各有正反用例；干净库报告 `ok`
+- [x] `--fix` 修复集严格限于安全三类，每笔进 log
+- [x] 演示库人工注入的问题 100% 被报出（broken-link/stale/orphan 全部报出）
 
 ---
 

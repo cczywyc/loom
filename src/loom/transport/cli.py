@@ -237,6 +237,31 @@ def graph(ctx: click.Context, name: str | None, depth: int):
 
 
 @cli.command()
+@click.option("--structural", is_flag=True, help="结构检查（目前唯一模式）")
+@click.option("--fix", is_flag=True, help="先自动修复安全子集（index/日期/source_hashes），再报告")
+@click.pass_context
+def lint(ctx: click.Context, structural: bool, fix: bool):
+    """结构体检：孤儿/坏链/坏 frontmatter/坏名/过期/重名；--fix 自动修安全子集。"""
+    loom = _get_loom(ctx)
+    fixed: list[str] = []
+    if fix:
+        from loom.lint.fix import apply_fixes
+
+        fixed = apply_fixes(loom)
+    report = loom.lint_structural()
+    if ctx.obj.get("json"):
+        click.echo(json.dumps({"fixed": fixed, "report": report.model_dump()}, ensure_ascii=False))
+    else:
+        for desc in fixed:
+            click.echo(f"fixed: {desc}")
+        if report.ok:
+            click.echo("structural lint: ok ✅")
+        else:
+            for f in report.findings:
+                click.echo(f"  [{f.kind}] {f.page} — {f.message}")
+
+
+@cli.command()
 @click.option(
     "--wiki-path", "wiki_path_opt", default=None, help="wiki 根目录（也可用全局 --wiki-path）"
 )

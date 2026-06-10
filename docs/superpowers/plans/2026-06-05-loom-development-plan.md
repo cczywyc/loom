@@ -1842,6 +1842,8 @@ def test_fix_never_touches_page_bodies(loom, wiki_root):
 
 ## Task 4.3: `lint_candidates`（语义可疑对象启发式）
 
+> **✅ 已完成** · 2026-06-10 · commit `3b48cbf` · 5 passed（全量 103 passed），ruff/format 全绿。三类纯结构启发式，每条带 reason，按 `(kind, pages)` 固定排序保证确定性（含 `test_deterministic_ordering`）。新增 `Candidate` 模型 + `Loom.lint_candidates`；另补了 sparse-area / stale-cluster 两个计划未给的测试。**实测演示库 `/tmp/loom-demo` 浮现 13 个 possible-contradiction**——密链 wiki 上该启发式偏敏感（多数只是共享 hub 页 react/task-decomposition 而非真矛盾），符合"只浮现、交 agent 判断"的设计：reason 让 agent 能快速甄别 hub 共享 vs 真矛盾。若日后过噪，可在 4.4/M5 调阈值（如要求共享目标占比、或排除 hub 页）。
+
 **目的：** 工具不下语义判断，只**浮现**值得 agent 看的对象——这是"确定性 vs 判断"分界线上最微妙的一个原语：启发式必须确定性、可解释。
 
 三类候选（全部纯结构启发，含 reason）：
@@ -1853,7 +1855,7 @@ def test_fix_never_touches_page_bodies(loom, wiki_root):
 - Create: `src/loom/lint/candidates.py`；Modify: `models.py`（`Candidate`）、`api.py`
 - Test: `tests/lint/test_candidates.py`
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 ```python
 def test_contradiction_candidate_pair(loom):
@@ -1875,7 +1877,7 @@ def test_deterministic_ordering(loom):
     ...
 ```
 
-- [ ] **Step 2–4: 红→实现→绿。Step 5: Commit** — `git commit -m "feat: lint_candidates heuristics surfacing pages for agent judgment"`
+- [x] **Step 2–4: 红→实现→绿。Step 5: Commit** — `git commit -m "feat: lint_candidates heuristics surfacing pages for agent judgment"`
 
 ## Task 4.4: 接线 + SKILL 更新 + 演示库验收
 

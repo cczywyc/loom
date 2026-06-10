@@ -193,6 +193,50 @@ def parse(ctx: click.Context, path: str):
 
 
 @cli.command()
+@click.argument("query")
+@click.option("--mode", default="keyword", help="检索模式（目前仅 keyword）")
+@click.option("--limit", default=10, type=int)
+@click.pass_context
+def search(ctx: click.Context, query: str, mode: str, limit: int):
+    """关键词检索（BM25），返回按相关性排序的命中。"""
+    hits = _get_loom(ctx).search(query, mode=mode, limit=limit)
+    if ctx.obj.get("json"):
+        click.echo(json.dumps([h.model_dump() for h in hits], ensure_ascii=False))
+    else:
+        for h in hits:
+            click.echo(f"{h.score:.2f}  [{h.type}] {h.name} — {h.snippet}")
+
+
+@cli.command(name="find-related")
+@click.argument("text")
+@click.option("--limit", default=10, type=int)
+@click.pass_context
+def find_related(ctx: click.Context, text: str, limit: int):
+    """给一段文本，返回可能相关的已有页 + 理由（供新建 vs 并入判断）。"""
+    refs = _get_loom(ctx).find_related(text, limit=limit)
+    if ctx.obj.get("json"):
+        click.echo(json.dumps([r.model_dump() for r in refs], ensure_ascii=False))
+    else:
+        for r in refs:
+            click.echo(f"{r.score:.2f}  {r.name} — {r.reason}")
+
+
+@cli.command()
+@click.argument("name", required=False)
+@click.option("--depth", default=1, type=int)
+@click.pass_context
+def graph(ctx: click.Context, name: str | None, depth: int):
+    """图谱：给 name 取其 depth 层邻域，否则返回全图（nodes + edges）。"""
+    g = _get_loom(ctx).graph(name, depth=depth)
+    if ctx.obj.get("json"):
+        click.echo(json.dumps(g.model_dump(), ensure_ascii=False))
+    else:
+        click.echo("nodes: " + ", ".join(n.name for n in g.nodes))
+        for e in g.edges:
+            click.echo(f"  {e.src} -> {e.dst}")
+
+
+@cli.command()
 @click.option(
     "--wiki-path", "wiki_path_opt", default=None, help="wiki 根目录（也可用全局 --wiki-path）"
 )

@@ -19,6 +19,9 @@ TOOL_NAMES = [
     "wiki_get_index",
     "wiki_get_schema",
     "wiki_get_purpose",
+    "wiki_search",
+    "wiki_find_related",
+    "wiki_graph",
 ]
 
 
@@ -85,5 +88,20 @@ def build_server(wiki_path: Path | str) -> FastMCP:
     def wiki_get_purpose():
         """Return purpose.md (goals, key questions, evolving thesis)."""
         return _result(loom.get_purpose)
+
+    @server.tool(name="wiki_search")
+    def wiki_search(query: str, mode: str = "keyword", limit: int = 10):
+        """Keyword (BM25) search over pages, ranked by relevance. Returns hits with name/title/type/score/snippet."""
+        return _result(lambda: [h.model_dump() for h in loom.search(query, mode=mode, limit=limit)])
+
+    @server.tool(name="wiki_find_related")
+    def wiki_find_related(text: str, limit: int = 10):
+        """Given a snippet or entity name, return possibly-related existing pages + reason. Use during ingest to decide: new page vs merge into an existing one."""
+        return _result(lambda: [r.model_dump() for r in loom.find_related(text, limit=limit)])
+
+    @server.tool(name="wiki_graph")
+    def wiki_graph(name: str | None = None, depth: int = 1):
+        """Wikilink graph. With name: its depth-N neighborhood; without: the full graph. Returns nodes + edges."""
+        return _result(lambda: loom.graph(name, depth=depth).model_dump())
 
     return server

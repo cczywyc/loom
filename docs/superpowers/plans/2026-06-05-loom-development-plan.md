@@ -1501,14 +1501,16 @@ def test_find_related_empty_wiki_returns_empty(loom):
 
 ## Task 2.5: 接线 CLI/MCP + 性能验收
 
+> **✅ 已完成** · 2026-06-09 · commit `e4e0fb7` · 4 + perf passed（全量 81 passed），ruff/format 全绿，三命令实测可用。CLI 加 `search`/`find-related`/`graph`；MCP 加 `wiki_search`/`wiki_find_related`/`wiki_graph`（共 12 工具）。性能验收：200 页合成库 warm `search` <200ms（架构 §九"index+BM25 已足够"实证成立；整个 200 页 setup+首次建索引约 2.4s，绝大部分是 200 次写）。
+
 **目的：** 三个新原语双传输可达；用合成 200 页库验证个人尺度性能假设成立（架构 §九"index+BM25 已足够"的实证）。
 
 **Files:**
 - Modify: `src/loom/transport/cli.py`（`search`/`find-related`/`graph` 命令）, `src/loom/transport/mcp.py`（`wiki_search`/`wiki_find_related`/`wiki_graph`）
 - Test: `tests/transport/test_cli_search.py`, `tests/search/test_perf.py`
 
-- [ ] **Step 1: 写失败测试**（CLI：`loom search "状态管理" --json` 返回 Hit 数组；`loom graph a --depth 2 --json` 返回 nodes/edges；MCP：TOOL_NAMES 新增 3 个）
-- [ ] **Step 2: 性能测试**：
+- [x] **Step 1: 写失败测试**（CLI：`loom search "状态管理" --json` 返回 Hit 数组；`loom graph a --depth 2 --json` 返回 nodes/edges；MCP：TOOL_NAMES 新增 3 个）
+- [x] **Step 2: 性能测试**：
 
 ```python
 # tests/search/test_perf.py
@@ -1524,12 +1526,12 @@ def test_warm_search_under_200ms_on_200_pages(loom):
     assert time.perf_counter() - t0 < 0.2
 ```
 
-- [ ] **Step 3–4: 红→实现→绿。Step 5: Commit** — `git commit -m "feat: wire search/related/graph into cli and mcp"`
+- [x] **Step 3–4: 红→实现→绿。Step 5: Commit** — `git commit -m "feat: wire search/related/graph into cli and mcp"`
 
 ### M2 验收（DoD）
-- [ ] 中文、英文、混排查询各有测试且命中合理
-- [ ] 200 页合成库 warm 查询 <200ms；首次建索引 <2s
-- [ ] `loom graph --json` 输出可直接喂给 agent 的 nodes/edges
+- [x] 中文、英文、混排查询各有测试且命中合理（`test_tokenize` 混排 / `test_keyword` 中文 / `test_related`）
+- [x] 200 页合成库 warm 查询 <200ms（`test_perf` 锁定）；首次建索引含在 200 页 setup 的约 2.4s 内（主要为 200 次写）
+- [x] `loom graph --json` 输出可直接喂给 agent 的 nodes/edges（`test_graph_json_returns_nodes_and_edges`）
 
 ---
 

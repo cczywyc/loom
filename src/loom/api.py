@@ -6,8 +6,10 @@ from loom.core.hash import register_source
 from loom.core.scaffold import init_wiki
 from loom.core.store import WikiStore
 from loom.errors import NotFound, ValidationFailed
+from loom.lint.candidates import lint_candidates as _lint_candidates
 from loom.lint.structural import lint_structural as _lint_structural
 from loom.models import (
+    Candidate,
     Graph,
     Hit,
     LintReport,
@@ -94,6 +96,9 @@ class Loom:
 
     def lint_structural(self) -> LintReport:
         return _lint_structural(self.store)
+
+    def lint_candidates(self) -> list[Candidate]:
+        return _lint_candidates(self.store)
 
     def get_index(self) -> str:
         return _read_or_notfound(self.paths.index_md)

@@ -132,6 +132,14 @@ class LintReport(BaseModel):
         return not self.findings
 
 
+class Candidate(BaseModel):
+    """启发式浮现、交 agent 判断的语义可疑对象（工具不下结论，只给 reason）。"""
+
+    kind: Literal["possible-contradiction", "sparse-area", "stale-cluster"]
+    pages: list[str]
+    reason: str
+
+
 _FM_DELIM = re.compile(r"^---\s*$", re.M)
 
 

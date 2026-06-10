@@ -1733,6 +1733,8 @@ def test_parse_html_strips_boilerplate(tmp_path):
 
 ## Task 4.1: 六个机械检查器 + `lint_structural`
 
+> **✅ 已完成** · 2026-06-10 · commit `6d50eee` · 7 passed（全量 93 passed），ruff/format 全绿。六个纯函数检查器（orphan/broken-link/bad-frontmatter/bad-name/stale/duplicate-title）跑在 `WikiSnapshot` 上聚合 `LintReport`；lint 永不抛错（`loads_page` 失败转 bad-frontmatter Finding）。新增 `GraphIndex.from_pages` 让图谱只用解析成功的页（避开坏 frontmatter 崩溃）。**实测 M3 演示库 `/tmp/loom-demo`（11 页）lint 全清、0 findings**。
+
 **目的：** 兜住结构漂移：agent 漏做的、人手工改坏的，全在这里被机械地查出来。每个检查器都是 `(snapshot) -> list[Finding]` 纯函数，独立可测。
 
 **Files:**
@@ -1755,7 +1757,7 @@ class LintReport(BaseModel):
     def ok(self) -> bool: return not self.findings
 ```
 
-- [ ] **Step 1: 写失败测试（每检查器至少一正一负）**
+- [x] **Step 1: 写失败测试（每检查器至少一正一负）**
 
 ```python
 def test_orphan_detected(loom):
@@ -1794,8 +1796,8 @@ def test_clean_wiki_reports_ok(loom):
     assert loom.lint_structural().ok
 ```
 
-- [ ] **Step 2: 确认失败。Step 3: 实现要点**：`WikiSnapshot` 一次性收集（页面列表含解析失败者、GraphIndex、ContentHash 档案），六检查器顺序跑、聚合 `LintReport`。orphan 复用 `GraphIndex.orphans()`；stale = 页面 `source_hashes` 与 raw 当前 hash 不一致；bad-frontmatter 捕获 `loads_page` 的 `ValidationFailed` 转 Finding（lint 永不抛错，只报告）。
-- [ ] **Step 4: 确认通过。Step 5: Commit** — `git commit -m "feat: structural lint with six mechanical checkers"`
+- [x] **Step 2: 确认失败。Step 3: 实现要点**：`WikiSnapshot` 一次性收集（页面列表含解析失败者、GraphIndex、ContentHash 档案），六检查器顺序跑、聚合 `LintReport`。orphan 复用 `GraphIndex.orphans()`；stale = 页面 `source_hashes` 与 raw 当前 hash 不一致；bad-frontmatter 捕获 `loads_page` 的 `ValidationFailed` 转 Finding（lint 永不抛错，只报告）。
+- [x] **Step 4: 确认通过。Step 5: Commit** — `git commit -m "feat: structural lint with six mechanical checkers"`
 
 ## Task 4.2: `lint --fix`（安全修复集）
 

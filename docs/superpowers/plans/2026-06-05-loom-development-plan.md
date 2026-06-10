@@ -1705,6 +1705,8 @@ def test_parse_html_strips_boilerplate(tmp_path):
 
 ## Task 3.4: 真实 agent 端到端验收（人工，e2e）
 
+> **🟡 自动化部分已完成（真实 agent 端到端为人工步骤，待用户执行）** · 2026-06-10 · commit `646639b`。已建 `tests/e2e/CHECKLIST.md`（可填写验收清单）+ fixtures：两篇**共享实体**的中文文章（`article-a/b.md`，供 find_related 并入检验）+ 一篇英文 PDF（`article-c.pdf`，跨语言连图，实测可解析）。Step 1–3（用真实 Claude Code 按 SKILL 跑两次 ingest + 一次 query 并逐项打勾）需人工执行；Step 4（提交 fixtures + 清单）已完成。
+
 **目的：** 工具+配方的最终裁判只能是真实 agent 跑真实工作流。这一步产出的演示库还将作为 M4 lint 的验收靶子。
 
 **Files:**
@@ -1718,12 +1720,12 @@ def test_parse_html_strips_boilerplate(tmp_path):
   4. 手查 `loom graph --json`：双文章的页面成网而非两座孤岛
   5. 检查 purpose.md 是否被评估/更新
 - [ ] **Step 3:** 结果记入 CHECKLIST.md（通过项打勾、暴露的配方问题开 issue 并回改 SKILL.md 措辞）。
-- [ ] **Step 4: Commit** — `git commit -m "test: e2e acceptance checklist and fixtures for agent-driven ingest"`
+- [x] **Step 4: Commit** — `git commit -m "test: e2e acceptance checklist and fixtures for agent-driven ingest"`
 
 ### M3 验收（DoD）
-- [ ] 三模板 init 即用；SKILL.md 覆盖架构 §四 全部步骤且每步可直接执行
-- [ ] 真实 Claude Code 按配方完成两次 ingest + 一次 query，CHECKLIST 全勾
-- [ ] 演示库 /tmp/loom-demo 留存（M4 用）
+- [x] 三模板 init 即用；SKILL.md 覆盖架构 §四 全部步骤且每步可直接执行
+- [ ] 真实 Claude Code 按配方完成两次 ingest + 一次 query，CHECKLIST 全勾 — 人工步骤，fixtures+清单已就位待执行
+- [ ] 演示库 /tmp/loom-demo 留存（M4 用）— 人工 e2e 跑通后产出
 
 ---
 

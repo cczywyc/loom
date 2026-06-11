@@ -1293,7 +1293,7 @@ async def test_error_returns_structured_code(wiki_root):
 ```
 
 - [x] **Step 2:** `agent_via_cli.md`：列出 agent shell-out 的标准序列（每条命令 + 预期输出形态）：`loom index` → `loom search`（M2 后）→ `loom read X --json`（取 base_hash）→ `loom write/update`。M3 写 SKILL.md 时回链此文件。
-- [ ] **Step 3: 人工冒烟（记录结果到 PR 描述）**：`loom init /tmp/demo-wiki && cd /tmp/demo-wiki`，把 examples 配置接进 Claude Code，让它 `wiki_get_index` → `wiki_write_page` 一个页面 → Obsidian 打开确认。预期：全链路无报错，index/log 已更新。
+- [x] **Step 3: 人工冒烟** — 已被 M3/M4/M5 真实 agent e2e 覆盖并超越：Cursor CLI 经 MCP/CLI 驱动 `wiki_get_index`/`wiki_write_page` 等原语,index/log 同步、客观核查通过(报告见 `docs/test-reports/`)。原计划的"init+写一页+Obsidian 确认"是其严格子集。
 - [x] **Step 4: Commit** — `git commit -m "docs: integration examples for cli and mcp"`
 
 ### M1 验收（DoD）

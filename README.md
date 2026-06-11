@@ -8,7 +8,7 @@ An embeddable toolkit that lets any AI agent compile scattered documents, notes,
 into a persistent, interlinked, compounding Markdown knowledge base.
 The agent does the thinking — Loom does all the tedious, reliable bookkeeping.
 
-[![Status](https://img.shields.io/badge/status-pre--alpha-orange)](#roadmap)
+[![Status](https://img.shields.io/badge/status-0.1.0-blue)](#roadmap)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](#contributing)
 
@@ -16,7 +16,7 @@ The agent does the thinking — Loom does all the tedious, reliable bookkeeping.
 
 ---
 
-> 🚧 **Loom is under active development and not yet released.** The API described below reflects the current design and may change. See the [Roadmap](#roadmap) for progress.
+> **Loom 0.1.0.** The deterministic core, both transports (CLI + MCP), search & graph, two-tier linting, cross-process consistency/safety, and the optional `[auto]` edge are all implemented and tested. See the [Roadmap](#roadmap).
 
 ## What is Loom?
 
@@ -71,12 +71,13 @@ The longer you use it, the richer the wiki gets: cross-references are already in
 ## Installation
 
 ```bash
-pip install loom            # core: deterministic primitives, CLI, MCP server
-pip install "loom[auto]"    # + optional standalone mode with a pluggable LLM
-pip install "loom[vector]"  # + optional vector search backend
+uv tool install loom-wiki          # recommended: installs the `loom` command globally
+# or:
+pip install loom-wiki              # core: deterministic primitives, CLI, MCP server
+pip install "loom-wiki[auto]"      # + optional standalone mode with a pluggable LLM
 ```
 
-Requires Python. The core has no LLM dependency.
+Requires Python ≥3.11. The core has **no LLM dependency**. (A `[vector]` search backend is reserved but intentionally not shipped — see [Scope](#scope--honest-limits).)
 
 ## Quick Start
 
@@ -90,14 +91,20 @@ This scaffolds the wiki directory, including `schema.md` (the behavioral contrac
 
 ### 2. Connect your agent
 
-**Via MCP** — add to your agent's MCP config (e.g. `.mcp.json` for Claude Code / Cursor):
+**Via MCP, Claude Code** — one command:
+
+```bash
+claude mcp add loom -- loom mcp --wiki-path /abs/path/to/my-wiki
+```
+
+**Via MCP, Cursor** — add to `~/.cursor/mcp.json`:
 
 ```json
 {
   "mcpServers": {
     "loom": {
-      "command": "python",
-      "args": ["-m", "loom.mcp", "--wiki-path", "./my-wiki"]
+      "command": "loom",
+      "args": ["mcp", "--wiki-path", "/abs/path/to/my-wiki"]
     }
   }
 }
@@ -140,8 +147,8 @@ Everything Loom exposes is a deterministic primitive — no primitive performs r
 | Primitive | What it does |
 |---|---|
 | `register_source(path)` | Copy into `raw/`, hash, deduplicate |
-| `parse(path)` | Extract text + metadata + images from md/pdf/html/docx |
-| `search(query, mode, limit)` | Keyword / vector / hybrid search, ranked hits |
+| `parse(path)` | Extract text + metadata from md/pdf/html/docx (output wrapped as untrusted) |
+| `search(query, mode, limit)` | Keyword (BM25 + jieba) search, ranked hits |
 | `find_related(text, limit)` | Candidate related pages for a piece of text or entity |
 | `read_page(name)` / `list_pages(...)` | Read a page / list pages with frontmatter summaries |
 | `write_page(name, content)` | Validate structure → lock → atomic write → auto-sync index & log |
@@ -186,19 +193,22 @@ Every page carries frontmatter with type, sources, and content hashes for stalen
 ## Scope & Honest Limits
 
 - **Output quality equals your agent's quality.** Loom ships no fallback model; a weak agent produces a weak wiki.
-- **Personal scale by design.** Around hundreds of sources and thousands-to-tens-of-thousands of tokens of core knowledge, index + keyword search is reliable — no vector infrastructure required. An optional vector backend exists for those who outgrow it.
-- **Sources are untrusted input.** Parsed source text is marked untrusted and must not direct operations — but this is defense in depth, not a guarantee. Curating trustworthy sources remains your job.
+- **Personal scale by design.** At hundreds of pages, index + keyword search is reliable: on the acceptance wiki, BM25 + jieba scored **90% top-3 hit rate** over 20 real questions — so **no vector infrastructure is shipped**. A `[vector]` backend is reserved (with a recorded re-enable threshold) for libraries that outgrow it; see [the decision record](docs/test-reports/2026-06-11-m6-bm25-vector-gate.md).
+- **Scanned PDFs aren't OCR'd.** PDFs without a text layer parse to empty text (with a warning); OCR them yourself first.
+- **Sources are untrusted input.** Parsed source text is wrapped as untrusted data and must not direct operations — but this is defense in depth, **not a guarantee**; `lint` checks correctness, not adversarial content. Curating trustworthy sources remains your job.
 - **It doesn't replace thinking.** Choosing what to read, asking good questions, deciding what it all means — that stays with you.
+
+**vs RAG / NotebookLM:** RAG re-discovers knowledge on every query and never accumulates; NotebookLM-style apps either don't accumulate either, or lock your knowledge into their format and model. Loom **compiles a persistent wiki once and keeps it fresh**, as plain Markdown you own — agent-swappable, app-free, git-native.
 
 ## Roadmap
 
-- [ ] **P0 — Deterministic core**: WikiStore (validation / locking / atomic & non-destructive writes), index, log, schema, content hashing, Markdown & PDF parsing
-- [ ] **P1 — Transports**: CLI (with `--json`) and MCP server mapping the primitives one-to-one
-- [ ] **P2 — Workflow recipes**: full `SKILL.md` for ingest/query/lint, wiki templates, examples
-- [ ] **P3 — Search & graph**: BM25 keyword search, graph index, `search` / `find_related` / `graph`
-- [ ] **P4 — Linting**: all structural checkers, semantic-candidate heuristics, `--fix`
-- [ ] **P5 — Consistency & safety**: per-file locks / OCC, untrusted-source delimiting, claim-level citations, review queue
-- [ ] **P6 — Optional edges & docs**: `[auto]` orchestrator, `[vector]` backend, integration guides
+- [x] **P0 — Deterministic core**: WikiStore (validation / locking / atomic & non-destructive writes), index, log, schema, content hashing, Markdown & PDF parsing
+- [x] **P1 — Transports**: CLI (with `--json`) and MCP server mapping the primitives one-to-one
+- [x] **P2 — Workflow recipes**: full `SKILL.md` for ingest/query/lint, wiki templates, examples
+- [x] **P3 — Search & graph**: BM25 keyword search, graph index, `search` / `find_related` / `graph`
+- [x] **P4 — Linting**: all structural checkers, semantic-candidate heuristics, `--fix`
+- [x] **P5 — Consistency & safety**: cross-process locks / OCC, untrusted-source delimiting, claim-level citations, review queue
+- [x] **P6 — Optional edges & docs**: `[auto]` orchestrator, DOCX parser, integration guides — `[vector]` backend gated out (BM25 sufficient at personal scale)
 
 ## For Agents Operating Loom
 

@@ -222,7 +222,7 @@ my-wiki/
 
 ## 集成
 
-更详细的接入选型（MCP 模式 vs CLI shell-out、SKILL.md 如何装进各 agent、`--auto` 何时用/不用）见 [docs/INTEGRATION.md](docs/INTEGRATION.md)。
+更详细的接入选型（MCP 模式 vs CLI shell-out、SKILL.md 如何装进各 agent、`--auto` 何时用/不用）见 [docs/INTEGRATION.zh-CN.md](docs/INTEGRATION.zh-CN.md)。
 
 ## 贡献
 

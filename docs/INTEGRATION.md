@@ -1,56 +1,58 @@
 # Integrating Loom into your agent
 
-Loom 是无内置大脑的工具:**你的 agent 是大脑,Loom 是双手**。接入有两条传输,选一条即可——能力完全等价。
+**English** · [简体中文](INTEGRATION.zh-CN.md)
 
-## 一、选型:MCP 模式 vs CLI shell-out 模式
+Loom is a brainless tool: **your agent is the brain, Loom is the hands.** There are two transports to connect through — pick either one; their capabilities are identical.
 
-| | **MCP 模式**(常驻 server) | **CLI shell-out 模式** |
+## 1. Choosing: MCP mode vs CLI shell-out mode
+
+| | **MCP mode** (resident server) | **CLI shell-out mode** |
 |---|---|---|
-| 形态 | `loom mcp` 常驻进程,agent 经 MCP 协议调 14 个 `wiki_*` 工具 | agent 直接跑 `loom ...` 命令(`--json` 取结构化输出) |
-| 适合 | 支持 MCP 的 agent(Claude Code、Cursor…);**密集 ingest/query 循环** | 任何能跑 shell 的 agent / 脚本 / cron;一次性任务 |
-| 性能 | **更快**:进程常驻 → 暖搜索索引、暖图谱、文件锁都在内存;jieba 词典只加载一次 | 每次冷启动(重开索引、重读文件、重载 jieba ~1s) |
-| 并发 | 常驻进程是天然的写串行化点 | 多进程并发安全(跨进程文件锁 + OCC),但无暖缓存 |
-| 配置 | 需在 agent 里登记 MCP server(见下) | 零配置,给 agent 工具运行权限即可 |
-| 退出码/错误 | 结构化错误体 `{ok:false,error:{code,message,…}}` | 退出码 0/2/1 + `--json` 错误体;冲突体含 `current_hash`、`changed_sections` |
+| Shape | `loom mcp` runs as a resident process; the agent calls 14 `wiki_*` tools over MCP | the agent runs `loom ...` commands directly (`--json` for structured output) |
+| Good for | MCP-capable agents (Claude Code, Cursor…); **dense ingest/query loops** | any agent / script / cron that can run a shell; one-off tasks |
+| Performance | **faster**: process stays warm → warm search index, warm graph, file locks all in memory; the jieba dictionary loads once | cold start each time (reopen the index, reread files, reload jieba ~1s) |
+| Concurrency | the resident process is a natural write-serialization point | multi-process safe (cross-process file locks + OCC), but no warm caches |
+| Config | must register the MCP server in the agent (see below) | zero config; just give the agent permission to run the tool |
+| Exit codes / errors | structured error body `{ok:false,error:{code,message,…}}` | exit codes 0/2/1 + `--json` error body; conflicts carry `current_hash`, `changed_sections` |
 
-**经验法则:** 用 MCP 的 agent → 走 MCP(更快、更稳);写脚本或临时跑 → CLI。两者可混用(同一座库)。
+**Rule of thumb:** MCP-capable agent → use MCP (faster, sturdier); writing a script or running ad hoc → CLI. The two can be mixed (against the same wiki).
 
-### 接 MCP
+### Connecting via MCP
 
 Claude Code:
 ```bash
 claude mcp add loom -- loom mcp --wiki-path /abs/path/to/my-wiki
 ```
-Cursor(`~/.cursor/mcp.json`):
+Cursor (`~/.cursor/mcp.json`):
 ```json
 { "mcpServers": { "loom": { "command": "loom", "args": ["mcp", "--wiki-path", "/abs/path/to/my-wiki"] } } }
 ```
 
-### 走 CLI
+### Via CLI
 
-给 agent 工具运行权限,让它调 `loom --wiki-path <根> <子命令> [--json]`。全局选项 `--wiki-path` / `--json` 放在子命令**之前**;`--base-hash` 等命令选项放在子命令**之后**。
+Give the agent permission to run the tool and let it call `loom --wiki-path <root> <subcommand> [--json]`. Global options `--wiki-path` / `--json` go **before** the subcommand; command options like `--base-hash` go **after** it.
 
-## 二、把 `SKILL.md` 装进 agent
+## 2. Installing `SKILL.md` into the agent
 
-`SKILL.md`(随包分发,也在仓库根)是把 Loom 原语编排成 ingest/query/lint **工作流的配方**——它告诉 agent 何时调哪个原语、哪步是"你(agent)判断"、哪步是工具记账。**没有它,agent 只有零件没有图纸。**
+`SKILL.md` (shipped with the package, also at the repo root) is the **recipe** that orchestrates Loom's primitives into the ingest/query/lint **workflows** — it tells the agent when to call which primitive, which step is "you (the agent) judge," and which is the tool's bookkeeping. **Without it, the agent has parts but no blueprint.**
 
-- **Claude Code**:作为 Agent Skill 安装(放进技能目录),或在系统提示/项目说明里引用其内容。
-- **Cursor / 其它**:把 `SKILL.md` 内容粘进项目规则(rules)或对话上下文。
-- **自建 agent**:把 `SKILL.md` 拼进 system prompt;它已写明"先读 `schema.md` 与 `purpose.md` 再动笔"。
+- **Claude Code**: install it as an Agent Skill (drop it into the skills directory), or reference its content in the system prompt / project instructions.
+- **Cursor / others**: paste `SKILL.md` into project rules or the conversation context.
+- **Your own agent**: concatenate `SKILL.md` into the system prompt; it already states "read `schema.md` and `purpose.md` before writing."
 
-> wiki 自带的 `schema.md` 是该库的**行为契约**(页面类型、命名、链接、引用规则)。agent 每次动笔前都应先读它——`SKILL.md` 第一步就是这个。
+> The wiki's own `schema.md` is that library's **behavioral contract** (page types, naming, linking, citation rules). The agent should read it before every write — and that's literally `SKILL.md`'s first step.
 
-## 三、`--auto` 何时用、何时不用
+## 3. When to use `--auto`, and when not to
 
-`loom ingest --auto <PATH>` / `loom query --auto "<问题>"` 让**工具内置一个 LLMProvider 临时扮演大脑**,跑完整工作流。这是**可选边缘**,需 `pip install 'loom-wiki[auto]'`。
+`loom ingest --auto <PATH>` / `loom query --auto "<question>"` let **a built-in LLMProvider play the brain temporarily** and run the full workflow. This is an **optional edge**; it requires `pip install 'loom-wiki[auto]'`.
 
-**该用:**
-- 你**没有**宿主 agent(纯脚本 / cron / 批处理),又想要"喂一个文件、自动建页"的便利;
-- 想**显式把活委托给一个便宜模型**(设 `LOOM_AUTO_PROVIDER=openai`、`LOOM_AUTO_BASE_URL` 指向本地 Ollama/vLLM)。
+**Use it when:**
+- You **don't have** a host agent (pure script / cron / batch job) and still want the convenience of "feed a file, get pages built";
+- You want to **explicitly delegate the work to a cheap model** (set `LOOM_AUTO_PROVIDER=openai` and `LOOM_AUTO_BASE_URL` to a local Ollama/vLLM).
 
-**不该用:**
-- 你**已经在**一个能力强的宿主 agent 里(Claude Code/Cursor)——那时让宿主 agent 直接编排原语,质量更高、上下文更全,`--auto` 反而是把判断降级给一个旁路模型。
+**Don't use it when:**
+- You're **already inside** a capable host agent (Claude Code/Cursor) — there, let the host agent orchestrate the primitives directly: higher quality, fuller context. `--auto` would instead demote the judgment to a side-channel model.
 
-配置(环境变量):`LOOM_AUTO_PROVIDER=anthropic|openai`、`LOOM_AUTO_MODEL`、`LOOM_AUTO_BASE_URL`(OpenAI 兼容端点,含 Ollama/vLLM)。例子见 `examples/standalone_auto.py`。
+Configuration (environment variables): `LOOM_AUTO_PROVIDER=anthropic|openai`, `LOOM_AUTO_MODEL`, `LOOM_AUTO_BASE_URL` (OpenAI-compatible endpoint, including Ollama/vLLM). See `examples/standalone_auto.py`.
 
-> 即便走 `--auto`,源文本也先被包成**不可信数据块**才喂给 provider——同一条防注入纵深。
+> Even via `--auto`, source text is first wrapped as an **untrusted data block** before being fed to the provider — the same prompt-injection defense in depth.

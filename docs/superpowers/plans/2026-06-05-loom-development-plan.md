@@ -1947,14 +1947,16 @@ def test_ten_processes_distinct_pages_all_succeed_index_consistent(wiki_root):
 
 ## Task 5.2: OCC 全链路收口
 
+> **✅ 已完成** · 2026-06-11 · commit `0925a28` · 全量 115 passed，ruff/format 全绿。`Conflict` 现携带 `current_hash`（agent 据此一步重试、免再读）+ `changed_sections`（提交内容 vs 磁盘的纯机械节级 diff），经 `LoomError.details()` 统一由 CLI `--json` 与 MCP 错误体透出。write_page 两个冲突分支（缺 base_hash / hash 不符）均附 current_hash，hash 不符再附差异节；update_page 也附 current_hash。实测 CLI 冲突体：`{"code":"CONFLICT","message":"…; sections differing now: 甲","current_hash":"3fd1…","changed_sections":["甲"]}`（exit 2）。
+
 **目的：** 把 OCC 协议在两条传输上补完整、报错信息可行动化（冲突时附当前 hash 与差异概要，agent 一步即可恢复）。
 
 **Files:**
 - Modify: `store.py`（Conflict 携带 `current_hash` 与变更节标题列表）、`cli.py`、`mcp.py`
 - Test: `tests/core/test_occ_flow.py`
 
-- [ ] **Step 1: 测试**：① CLI `write --base-hash 旧值` → exit 2 且 `--json` 错误体含 `current_hash`；② MCP 同语义；③ `update --base-hash` 透传；④ Conflict message 包含"哪些节在你读后变了"（用 `list_sections` 对比基线与当前，纯机械 diff）。
-- [ ] **Step 2–4: 红→实现→绿。Step 5: Commit** — `git commit -m "feat: actionable OCC conflicts across cli and mcp"`
+- [x] **Step 1: 测试**：① CLI `write --base-hash 旧值` → exit 2 且 `--json` 错误体含 `current_hash`；② MCP 同语义；③ `update --base-hash` 透传；④ Conflict message 包含"哪些节在你读后变了"（用 `list_sections` 对比基线与当前，纯机械 diff）。
+- [x] **Step 2–4: 红→实现→绿。Step 5: Commit** — `git commit -m "feat: actionable OCC conflicts across cli and mcp"`
 
 ## Task 5.3: 源文本 untrusted 分隔
 

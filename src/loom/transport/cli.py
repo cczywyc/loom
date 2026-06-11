@@ -184,10 +184,14 @@ def register(ctx: click.Context, path: str):
 
 @cli.command()
 @click.argument("path")
+@click.option("--raw", is_flag=True, help="输出裸文本，不包裹不可信分隔（默认包裹以防注入）")
 @click.pass_context
-def parse(ctx: click.Context, path: str):
-    """解析 raw/ 下来源（相对 wiki 根的路径），输出文本（--json 输出完整结构）。"""
-    doc = _get_loom(ctx).parse(path)
+def parse(ctx: click.Context, path: str, raw: bool):
+    """解析 raw/ 下来源（相对 wiki 根的路径），输出文本（--json 输出完整结构）。
+
+    默认把文本包成「不可信资料」块交给 agent（防 prompt 注入）；--raw 关闭包裹。
+    """
+    doc = _get_loom(ctx).parse(path, wrap=not raw)
     if ctx.obj.get("json"):
         click.echo(json.dumps(doc.model_dump(), ensure_ascii=False))
     else:

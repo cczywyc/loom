@@ -49,11 +49,11 @@ class Loom:
     def register_source(self, path: Path | str) -> SourceRef:
         return register_source(self.paths, Path(path))
 
-    def parse(self, path: Path | str) -> ParsedDocument:
+    def parse(self, path: Path | str, wrap: bool = True) -> ParsedDocument:
         p = Path(path)
         if not p.is_absolute():
             p = self.paths.root / p  # 接受相对 wiki 根的路径（如 register 返回的 raw/sources/…）
-        return parse_file(p, assets_dir=self.paths.raw_assets)
+        return parse_file(p, assets_dir=self.paths.raw_assets, wrap=wrap)
 
     def read_page(self, name: str) -> WikiPage:
         return self.store.read_page(name)

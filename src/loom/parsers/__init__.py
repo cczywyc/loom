@@ -3,6 +3,7 @@ from pathlib import Path
 from loom.core.fsutil import sha256_file
 from loom.errors import ValidationFailed
 from loom.models import ParsedDocument
+from loom.parsers.docx import parse_docx
 from loom.parsers.html import parse_html
 from loom.parsers.markdown import parse_markdown
 from loom.parsers.pdf import parse_pdf
@@ -14,6 +15,7 @@ PARSERS = {
     ".pdf": parse_pdf,
     ".html": parse_html,
     ".htm": parse_html,
+    ".docx": parse_docx,
 }
 
 

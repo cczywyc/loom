@@ -15,6 +15,7 @@
 ## 命名与链接
 - 页面名：kebab-case ASCII（如 `andrej-karpathy`），全库唯一；中文放 frontmatter `title`
 - 正文链接一律 `[[name|中文显示名]]`；新概念首次出现就建链，哪怕目标页还没建（lint 会跟踪）
+- 论断级溯源（可选）：句末加 `^[src:来源文件#定位符]`（如 `^[src:attention.pdf#p3]`），来源须在页面 sources 中；来源变更时 lint 能精确点名受影响论断
 - frontmatter 必填：type / title / created / updated；强烈建议填 summary（进 index）与 sources
 
 ## ingest 必须做到

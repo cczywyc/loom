@@ -2108,11 +2108,13 @@ def test_auto_unavailable_without_extra(monkeypatch):
 
 ## Task 6.2: DOCX 解析器
 
+> **✅ 已完成** · 2026-06-11 · commit `70a17a9` · 全量 127 passed，ruff/format 全绿。`python-docx>=1.1` 移入主依赖；`parse_docx` 逐段抽取，Word 标题样式转 markdown 标题（Title=`#`、Heading N=`#`×(N+1)，衔接 loom `##~######` 节约定），注册 `.docx`。测试用 python-docx 动态生成 fixture（标题+两段）验证标题层级与正文。四种解析器（md/pdf/html/docx）收口。
+
 **目的：** 补全四种解析器的最后一种（架构 parsers 清单收口）。
 
 **Files:** Create: `src/loom/parsers/docx.py`；Modify: `pyproject.toml`（`python-docx>=1.1` 移入主依赖）；Test: `tests/parsers/test_docx.py`（python-docx 动态生成 fixture：两段文字+一个标题 → 解析出含标题层级的文本）。
 
-- [ ] **红→实现→绿→Commit** — `git commit -m "feat: docx parser"`
+- [x] **红→实现→绿→Commit** — `git commit -m "feat: docx parser"`
 
 ## Task 6.3:（可选门）`[vector]` 检索后端
 

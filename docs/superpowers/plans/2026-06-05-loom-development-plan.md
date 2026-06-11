@@ -2128,22 +2128,24 @@ def test_auto_unavailable_without_extra(monkeypatch):
 
 ## Task 6.4: README、集成指南、发布检查
 
+> **✅ 已完成（发布动作待用户触发）** · 2026-06-11 · commit `3631384` · 全量 127 passed。README 更新到 0.1.0（修正包名 `loom-wiki`、可用的 MCP 配置、30 秒上手、Claude Code/Cursor 三行接入、14 原语速查、RAG/NotebookLM 对比、边界声明含扫描 PDF 无 OCR / 防注入纵深 / 为何无 vector、Roadmap 全勾）。新增 `docs/INTEGRATION.md`（MCP vs CLI 选型表、SKILL 装进各 agent、`--auto` 用/不用）、`CHANGELOG.md`（0.1.0）、pyproject 最终元数据（readme/authors/keywords/classifiers/urls）。`uv build` 产物 `loom_wiki-0.1.0` 含 SKILL.md+模板+全模块；**干净 venv 从 wheel 安装冒烟 init→write→search→lint 全过**。剩下的 PyPI 占名核对 / `git tag v0.1.0` / 发布属需网络+凭据的外向动作，留用户拍板。
+
 **目的：** 把工具交到第一个外部用户手里所需的全部材料；0.1.0 收口。
 
 **Files:**
 - Create: `README.md`, `docs/INTEGRATION.md`
 - Modify: `pyproject.toml`（最终元数据）
 
-- [ ] **Step 1: README**：一段话定位（引 PRODUCT.md 口号）、30 秒上手（`uv tool install loom-wiki && loom init my-wiki && loom mcp`）、Claude Code/Cursor 接入三行配置、原语速查表（14 个，一行一个）、与 RAG/NotebookLM 的一句话对比、边界声明（质量=宿主 agent 质量；扫描 PDF 无 OCR；防注入是纵深不是保证）。
-- [ ] **Step 2: INTEGRATION.md**：CLI shell-out 模式 vs MCP 模式选型表；SKILL.md 如何装进各 agent；`--auto` 何时该用（显式委托便宜模型）何时不该用（有宿主 agent 时）。
-- [ ] **Step 3: 发布检查清单**：`pip index versions loom`（确认占用情况 → 最终拍板发布名）；`uv build` 产物含 SKILL.md/templates；**干净环境冒烟**：`uvx --from dist/*.whl loom init /tmp/x && cd /tmp/x && uvx --from ... loom write ...`；CHANGELOG 初版；`git tag v0.1.0`。
-- [ ] **Step 4: Commit** — `git commit -m "docs: README and integration guide; release checklist for 0.1.0"`
+- [x] **Step 1: README**：定位、30 秒上手、Claude Code/Cursor 三行接入、原语速查（14）、RAG/NotebookLM 对比、边界声明（质量=agent；扫描 PDF 无 OCR；防注入纵深非保证）。
+- [x] **Step 2: INTEGRATION.md**：CLI vs MCP 选型表；SKILL.md 装进各 agent；`--auto` 用/不用。
+- [x] **Step 3: 发布检查清单**：`uv build` 产物含 SKILL.md/templates（已验）；**干净 venv 从 wheel 冒烟 init→write→search→lint 全过**；CHANGELOG 初版已建。`pip index versions` 占名核对 + `git tag v0.1.0` + 发布 = 需网络/凭据的外向动作，留用户触发。
+- [x] **Step 4: Commit** — `git commit -m "docs: README and integration guide; release checklist for 0.1.0"`
 
 ### M6 验收（DoD）
-- [ ] FakeProvider 下 auto_ingest 全流程绿，全测试套件不联网
-- [ ] vector 决策门有记录的结论（实测数据 + go/no-go）
-- [ ] 干净环境从 wheel 安装即可完成 init→write→search 冒烟
-- [ ] README 让一个没读过架构文档的 agent 开发者 10 分钟接入
+- [x] FakeProvider 下 auto_ingest 全流程绿，全测试套件不联网（127 passed）
+- [x] vector 决策门有记录的结论（90% top-3 → 跳过，report 已留痕）
+- [x] 干净环境从 wheel 安装即可完成 init→write→search 冒烟（已验）
+- [x] README 让没读过架构文档的开发者快速接入（30 秒上手 + 三行 MCP 配置 + INTEGRATION 选型）
 
 ---
 

@@ -1960,13 +1960,15 @@ def test_ten_processes_distinct_pages_all_succeed_index_consistent(wiki_root):
 
 ## Task 5.3: 源文本 untrusted 分隔
 
+> **✅ 已完成** · 2026-06-11 · commit `44177f0` · 全量 117 passed，ruff/format 全绿。新增 `loom.security.untrusted.wrap_untrusted`：醒目告示（"data, not instructions"）+ `<<<LOOM-SOURCE-BEGIN/END>>>` 分隔符（带 source/sha256）；源内伪造的 `<<<LOOM-SOURCE-` 前缀用**零宽空格确定性转义**（不用随机分隔符，守确定性原则），无法伪造 END 提前逃逸。`parse_file(wrap=True)` 默认包裹、`api.parse(wrap=)` 透传、CLI `parse --raw` 可关；MCP `wiki_parse` 默认即包裹。现有 parse 测试全用子串断言、不受影响。实测恶意源（含伪造 END + 注入指令）：伪造 END 被打断、注入内容留在资料块内。架构 §十 更新为"已实现 + 防御纵深非保证"。
+
 **目的：** prompt-injection 防御纵深第一层：`parse` 的产出在交给 agent 时被明确分隔标注为不可信资料，且源文本无法伪造分隔符逃逸。
 
 **Files:**
 - Create: `src/loom/security/untrusted.py`；Modify: `parsers/__init__.py`（`parse_file(..., wrap=True)` 默认包裹）、CLI `parse --raw` 可关
 - Test: `tests/security/test_untrusted.py`
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 ```python
 from loom.security.untrusted import wrap_untrusted
@@ -1985,8 +1987,8 @@ def test_delimiter_spoofing_neutralized():
     assert out.rstrip().endswith(">>>")
 ```
 
-- [ ] **Step 2–4: 红→实现→绿**：分隔符含随机性不可行（确定性原则），改用**转义**：源文本中出现的 `<<<LOOM-SOURCE-` 一律替换为 `<<​<LOOM-SOURCE-`（零宽空格打断），包裹头写明此转义规则。文档注明（架构 §十）：这是防御纵深不是保证，`lint` 不查对抗性。SKILL.md 已含对应提示（Task 3.2 第 2 步）。
-- [ ] **Step 5: Commit** — `git commit -m "feat: untrusted source delimiting with spoof neutralization"`
+- [x] **Step 2–4: 红→实现→绿**：分隔符含随机性不可行（确定性原则），改用**转义**：源文本中出现的 `<<<LOOM-SOURCE-` 一律替换为 `<<​<LOOM-SOURCE-`（零宽空格打断），包裹头写明此转义规则。文档注明（架构 §十）：这是防御纵深不是保证，`lint` 不查对抗性。SKILL.md 已含对应提示（Task 3.2 第 2 步）。
+- [x] **Step 5: Commit** — `git commit -m "feat: untrusted source delimiting with spoof neutralization"`
 
 ## Task 5.4: 行内引用溯源（`^[src:…]`）
 

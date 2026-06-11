@@ -32,7 +32,8 @@ def _result(fn: Callable[[], Any]) -> Any:
     try:
         return fn()
     except LoomError as e:
-        return {"ok": False, "error": {"code": getattr(e, "code", "LOOM_ERROR"), "message": str(e)}}
+        error = {"code": getattr(e, "code", "LOOM_ERROR"), "message": str(e), **e.details()}
+        return {"ok": False, "error": error}
 
 
 def build_server(wiki_path: Path | str) -> FastMCP:

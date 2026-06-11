@@ -9,10 +9,21 @@ from loom.core.fsutil import atomic_write_text, sha256_file, sha256_text
 from loom.core.index import IndexManager
 from loom.core.lock import page_lock
 from loom.core.log import LogWriter
-from loom.core.sections import apply_patch
+from loom.core.sections import apply_patch, list_sections
 from loom.errors import Conflict, NotFound, ValidationFailed
 from loom.models import TYPE_DIRS, Patch, PageSummary, WikiPage, WriteResult, dumps_page, loads_page
 from loom.validate import validate_page
+
+
+def _section_text(body: str) -> dict[str, str]:
+    lines = body.split("\n")
+    return {s.title: "\n".join(lines[s.start : s.end]).strip() for s in list_sections(body)}
+
+
+def _changed_sections(submitted_body: str, disk_body: str) -> list[str]:
+    """纯机械 diff：两个 body 中内容有别（或一方独有）的节标题，按字典序。"""
+    a, b = _section_text(submitted_body), _section_text(disk_body)
+    return sorted(t for t in set(a) | set(b) if a.get(t) != b.get(t))
 
 
 class WikiStore:
@@ -97,12 +108,16 @@ class WikiStore:
                 disk = sha256_file(path)
                 if base_hash is None:
                     raise Conflict(
-                        f"page '{name}' exists; read it first and pass base_hash, or use update_page"
+                        f"page '{name}' exists; read it first and pass base_hash, or use update_page",
+                        current_hash=disk,
                     )
                 if disk != base_hash:
-                    raise Conflict(
-                        f"page '{name}' changed on disk since you read it; re-read and retry"
-                    )
+                    disk_body = loads_page(name, path.read_text(encoding="utf-8")).body
+                    changed = _changed_sections(page.body, disk_body)
+                    msg = f"page '{name}' changed on disk since you read it; re-read and retry"
+                    if changed:
+                        msg += f"; sections differing now: {', '.join(changed)}"
+                    raise Conflict(msg, current_hash=disk, changed_sections=changed)
             created = not path.exists()
             text = dumps_page(page)
             atomic_write_text(path, text)
@@ -123,7 +138,8 @@ class WikiStore:
             page = self.read_page(name)  # 缺页抛 NotFound
             if base_hash is not None and page.content_hash != base_hash:
                 raise Conflict(
-                    f"page '{name}' changed on disk since you read it; re-read and retry"
+                    f"page '{name}' changed on disk since you read it; re-read and retry",
+                    current_hash=page.content_hash,
                 )
             if patch.op == "set_frontmatter":
                 updates = yaml.safe_load(patch.content) or {}

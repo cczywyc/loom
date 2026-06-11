@@ -74,3 +74,25 @@ async def test_lint_via_mcp(wiki_root):
         assert "broken-link" in str(res)  # 坏链被报出
         res = await client.call_tool("wiki_lint_candidates", {})
         assert "sparse-area" in str(res)  # 单页孤立 → 稀疏区候选
+
+
+@pytest.mark.anyio
+async def test_write_conflict_includes_current_hash_via_mcp(wiki_root):
+    from mcp.shared.memory import create_connected_server_and_client_session as connect
+
+    from loom.api import Loom
+
+    loom = Loom(wiki_root)
+    r1 = loom.write_page("p", page_md(type="concept", title="P", body="v1"))
+    loom.write_page("p", page_md(type="concept", title="P", body="v2"), base_hash=r1.content_hash)
+    server = build_server(wiki_root)
+    async with connect(server._mcp_server) as client:
+        res = await client.call_tool(
+            "wiki_write_page",
+            {
+                "name": "p",
+                "content": page_md(type="concept", title="P", body="v3"),
+                "base_hash": r1.content_hash,
+            },
+        )
+        assert "CONFLICT" in str(res) and "current_hash" in str(res)

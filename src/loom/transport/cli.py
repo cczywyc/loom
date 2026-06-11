@@ -22,11 +22,13 @@ class LoomGroup(click.Group):
             return super().invoke(ctx)
         except LoomError as e:
             code = getattr(e, "code", "LOOM_ERROR")
+            error = {"code": code, "message": str(e), **e.details()}
             if ctx.obj and ctx.obj.get("json"):
-                payload = {"ok": False, "error": {"code": code, "message": str(e)}}
-                click.echo(json.dumps(payload, ensure_ascii=False))
+                click.echo(json.dumps({"ok": False, "error": error}, ensure_ascii=False))
             else:
                 click.echo(f"error [{code}]: {e}", err=True)
+                if error.get("current_hash"):
+                    click.echo(f"  current_hash: {error['current_hash']}", err=True)
             ctx.exit(_exit_code(e))
 
 

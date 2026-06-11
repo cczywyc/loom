@@ -17,11 +17,15 @@ from loom.models import (
     ParsedDocument,
     PageSummary,
     Patch,
+    ReviewItem,
     SourceRef,
     WikiPage,
     WriteResult,
+    dumps_page,
+    loads_page,
 )
 from loom.parsers import parse_file
+from loom.review.queue import ReviewQueue
 from loom.search.keyword import KeywordSearch
 from loom.search.related import find_related as _find_related
 
@@ -43,6 +47,7 @@ class Loom:
     def __init__(self, root: Path | str):
         self.paths = LoomPaths(root=Path(root))
         self.store = WikiStore(self.paths)
+        self._review = ReviewQueue(self.paths.loom_dir)
         self._search: KeywordSearch | None = None  # 惰性构建，写入后失效
         self._graph: GraphIndex | None = None
 
@@ -65,6 +70,50 @@ class Loom:
         res = self.store.write_page(name, content, base_hash=base_hash)
         self._search = self._graph = None  # 写入后检索/图谱索引失效，下次按需重建
         return res
+
+    # ---- 审核队列（高风险改动可先 staged 成 diff 由人审）----
+
+    def stage_review(self, name: str, content: str, base_hash: str | None = None) -> str:
+        """把一次整页写入暂存为待审 diff，不落盘；返回 review id。"""
+        existing = self.store._find_existing(name)
+        old_text = existing.read_text(encoding="utf-8") if existing else ""
+        try:
+            new_text = dumps_page(loads_page(name, content))  # 规范化，diff 才干净
+        except ValidationFailed:
+            new_text = content  # 非法内容也允许 staged，apply 时再报
+        return self._review.stage(
+            name=name, content=content, base_hash=base_hash, old_text=old_text, new_text=new_text
+        ).id
+
+    def stage_update_review(self, name: str, patch: Patch, base_hash: str | None = None) -> str:
+        """把一次段级更新的结果暂存为待审 diff。"""
+        content, current_hash = self.store.preview_update(name, patch)
+        existing = self.store._find_existing(name)
+        old_text = existing.read_text(encoding="utf-8") if existing else ""
+        return self._review.stage(
+            name=name,
+            content=content,
+            base_hash=base_hash or current_hash,
+            old_text=old_text,
+            new_text=content,
+        ).id
+
+    def list_reviews(self) -> list[ReviewItem]:
+        return self._review.list()
+
+    def get_review(self, rid: str) -> ReviewItem:
+        return self._review.get(rid)
+
+    def apply_review(self, rid: str) -> WriteResult:
+        """落盘 staged 改动：走正常 write_page（完整校验 + OCC），成功后记 REVIEW 日志并出队。"""
+        item = self._review.get(rid)
+        res = self.write_page(item.name, item.content, base_hash=item.base_hash)
+        self.store.log.append("REVIEW", item.name, "applied")
+        self._review.remove(rid)
+        return res
+
+    def reject_review(self, rid: str) -> None:
+        self._review.remove(rid)
 
     def update_page(self, name: str, patch: Patch, base_hash: str | None = None) -> WriteResult:
         res = self.store.update_page(name, patch, base_hash=base_hash)

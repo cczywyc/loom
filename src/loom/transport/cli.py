@@ -130,17 +130,31 @@ def _emit_write_result(ctx: click.Context, res) -> None:
             click.echo(f"  warning: {w}", err=True)
 
 
+def _emit_staged(ctx: click.Context, rid: str) -> None:
+    if ctx.obj.get("json"):
+        click.echo(json.dumps({"ok": True, "staged": rid}, ensure_ascii=False))
+    else:
+        click.echo(f"staged for review: {rid}  (loom review show/apply/reject {rid})")
+
+
 @cli.command()
 @click.argument("name")
 @click.option(
     "--from-file", "from_file", type=click.Path(exists=True), help="内容文件；省略读 stdin"
 )
 @click.option("--base-hash", "base_hash", default=None, help="OCC：覆写已存在页须带读取时的 hash")
+@click.option("--review", "review_", is_flag=True, help="不直接写，暂存为待人审的 diff")
 @click.pass_context
-def write(ctx: click.Context, name: str, from_file: str | None, base_hash: str | None):
-    """写整页（新建或覆写）。内容来自 --from-file 或 stdin。"""
-    res = _get_loom(ctx).write_page(name, _read_content(from_file), base_hash=base_hash)
-    _emit_write_result(ctx, res)
+def write(
+    ctx: click.Context, name: str, from_file: str | None, base_hash: str | None, review_: bool
+):
+    """写整页（新建或覆写）。内容来自 --from-file 或 stdin；--review 暂存待人审。"""
+    loom = _get_loom(ctx)
+    content = _read_content(from_file)
+    if review_:
+        _emit_staged(ctx, loom.stage_review(name, content, base_hash=base_hash))
+        return
+    _emit_write_result(ctx, loom.write_page(name, content, base_hash=base_hash))
 
 
 @cli.command()
@@ -155,6 +169,7 @@ def write(ctx: click.Context, name: str, from_file: str | None, base_hash: str |
     "--from-file", "from_file", type=click.Path(exists=True), help="内容文件；省略读 stdin"
 )
 @click.option("--base-hash", "base_hash", default=None)
+@click.option("--review", "review_", is_flag=True, help="不直接写，暂存为待人审的 diff")
 @click.pass_context
 def update(
     ctx: click.Context,
@@ -163,11 +178,15 @@ def update(
     op: str,
     from_file: str | None,
     base_hash: str | None,
+    review_: bool,
 ):
-    """段级更新单页。内容来自 --from-file 或 stdin。"""
+    """段级更新单页。内容来自 --from-file 或 stdin；--review 暂存待人审。"""
+    loom = _get_loom(ctx)
     patch = Patch(op=op.replace("-", "_"), section=section, content=_read_content(from_file))
-    res = _get_loom(ctx).update_page(name, patch, base_hash=base_hash)
-    _emit_write_result(ctx, res)
+    if review_:
+        _emit_staged(ctx, loom.stage_update_review(name, patch, base_hash=base_hash))
+        return
+    _emit_write_result(ctx, loom.update_page(name, patch, base_hash=base_hash))
 
 
 @cli.command()
@@ -285,6 +304,55 @@ def lint(ctx: click.Context, structural: bool, candidates_: bool, fix: bool):
             else:
                 for c in cands:
                     click.echo(f"  [{c.kind}] {', '.join(c.pages)} — {c.reason}")
+
+
+@cli.group()
+def review():
+    """高风险改动的人审队列：list / show / apply / reject。"""
+
+
+@review.command(name="list")
+@click.pass_context
+def review_list(ctx: click.Context):
+    """列出待审项。"""
+    items = _get_loom(ctx).list_reviews()
+    if ctx.obj.get("json"):
+        click.echo(json.dumps([it.model_dump() for it in items], ensure_ascii=False))
+    else:
+        for it in items:
+            click.echo(f"{it.id}\t{it.name}\tstaged {it.staged_at}")
+
+
+@review.command(name="show")
+@click.argument("rid")
+@click.pass_context
+def review_show(ctx: click.Context, rid: str):
+    """打印某待审项的 diff（--json 输出完整项）。"""
+    item = _get_loom(ctx).get_review(rid)
+    if ctx.obj.get("json"):
+        click.echo(json.dumps(item.model_dump(), ensure_ascii=False))
+    else:
+        click.echo(item.diff)
+
+
+@review.command(name="apply")
+@click.argument("rid")
+@click.pass_context
+def review_apply(ctx: click.Context, rid: str):
+    """落盘某待审项（走完整校验 + OCC）。"""
+    _emit_write_result(ctx, _get_loom(ctx).apply_review(rid))
+
+
+@review.command(name="reject")
+@click.argument("rid")
+@click.pass_context
+def review_reject(ctx: click.Context, rid: str):
+    """丢弃某待审项，页面不变。"""
+    _get_loom(ctx).reject_review(rid)
+    if ctx.obj.get("json"):
+        click.echo(json.dumps({"ok": True, "rejected": rid}, ensure_ascii=False))
+    else:
+        click.echo(f"rejected {rid}")
 
 
 @cli.command()

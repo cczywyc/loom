@@ -132,6 +132,20 @@ class WikiStore:
             warnings=warnings,
         )
 
+    def preview_update(self, name: str, patch: Patch) -> tuple[str, str]:
+        """计算段级更新后的整页内容（不落盘、不加锁），供 --review 暂存。
+
+        返回 (新整页 markdown, 当前磁盘 content_hash)。变换逻辑与 update_page 一致。
+        """
+        page = self.read_page(name)
+        current_hash = page.content_hash
+        if patch.op == "set_frontmatter":
+            page.meta = page.meta.model_copy(update=yaml.safe_load(patch.content) or {})
+        else:
+            page.body = apply_patch(page.body, patch)
+        page.meta.updated = clock.today()
+        return dumps_page(page), current_hash
+
     def update_page(self, name: str, patch: Patch, base_hash: str | None = None) -> WriteResult:
         """非破坏性段级更新：锁内 read→改→写，天然无丢失更新；可选 base_hash 走 OCC。"""
         with page_lock(self.paths.loom_dir, name):

@@ -140,6 +140,17 @@ class Candidate(BaseModel):
     reason: str
 
 
+class ReviewItem(BaseModel):
+    """暂存待人审的高风险改动：apply 时走正常 write_page（含校验+OCC）才真正落盘。"""
+
+    id: str  # <seq>-<name>，即 .loom/review/ 下的文件名
+    name: str
+    content: str  # 待写入的整页 markdown
+    base_hash: str | None = None
+    diff: str  # 与当前页的 unified diff（给人看）
+    staged_at: str
+
+
 _FM_DELIM = re.compile(r"^---\s*$", re.M)
 
 

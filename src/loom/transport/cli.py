@@ -355,6 +355,61 @@ def review_reject(ctx: click.Context, rid: str):
         click.echo(f"rejected {rid}")
 
 
+def _build_provider():
+    """按环境变量构造 LLMProvider；缺 [auto] extra 时抛带安装提示的 LoomError。
+
+    LOOM_AUTO_PROVIDER=anthropic|openai（默认 anthropic）、LOOM_AUTO_MODEL、LOOM_AUTO_BASE_URL。
+    """
+    import os
+
+    from loom.auto.providers import AnthropicProvider, OpenAICompatProvider
+
+    kind = os.environ.get("LOOM_AUTO_PROVIDER", "anthropic").lower()
+    model = os.environ.get("LOOM_AUTO_MODEL")
+    if kind == "openai":
+        return OpenAICompatProvider(
+            model=model or "gpt-4o-mini", base_url=os.environ.get("LOOM_AUTO_BASE_URL")
+        )
+    return AnthropicProvider(model=model or "claude-opus-4-8")
+
+
+@cli.command()
+@click.argument("path", type=click.Path(exists=True))
+@click.option("--auto", is_flag=True, help="用内置 LLMProvider 跑完整编排（无 agent 便利出口）")
+@click.pass_context
+def ingest(ctx: click.Context, path: str, auto: bool):
+    """[auto] 一条命令跑完整 ingest（register→parse→抽取→消解→write→purpose）。"""
+    if not auto:
+        raise ValidationFailed(
+            "loom 默认由宿主 agent 编排；无 agent 时用 `loom ingest --auto <PATH>`"
+            "（需 pip install 'loom-wiki[auto]'）"
+        )
+    from loom.auto.orchestrator import auto_ingest
+
+    report = auto_ingest(_get_loom(ctx), path, _build_provider())
+    if ctx.obj.get("json"):
+        click.echo(json.dumps(report.model_dump(), ensure_ascii=False))
+    else:
+        click.echo(f"ingested {len(report.pages_written)} 页：{', '.join(report.pages_written)}")
+        if report.purpose_updated:
+            click.echo("purpose.md 已更新")
+
+
+@cli.command()
+@click.argument("question")
+@click.option("--auto", is_flag=True, help="用内置 LLMProvider 综合作答（无 agent 便利出口）")
+@click.pass_context
+def query(ctx: click.Context, question: str, auto: bool):
+    """[auto] 一条命令回答问题（search→read→综合）。"""
+    if not auto:
+        raise ValidationFailed(
+            "无 agent 时用 `loom query --auto \"<问题>\"`（需 pip install 'loom-wiki[auto]'）"
+        )
+    from loom.auto.orchestrator import auto_query
+
+    click.echo(auto_query(_get_loom(ctx), question, _build_provider()))
+
+
 @cli.command()
 @click.option(
     "--wiki-path", "wiki_path_opt", default=None, help="wiki 根目录（也可用全局 --wiki-path）"

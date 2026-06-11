@@ -22,6 +22,7 @@ loom 工具本身不含推理：解析、检索、存储、结构校验、index/
    - 候选里已有同一事物 → **并入**：`loom read <name> --json` 取 `content_hash` 作 base_hash → `loom update <name> --section <节> --op append`（或 replace）。
    - 没有 → **建新页**：内容写到临时文件，`loom write <name> --from-file <tmp.md>`。frontmatter 按 schema 填（type/title/created/updated；建议 summary 与 sources 回指 raw 路径）。
    - **不许凭记忆判断有没有重复——必须先 find-related。**
+   - **行内溯源（可选，按需加精）**：写正文时，**只**对同时满足这三条的论断在句末标 `^[src:来源文件#定位]`（如 `^[src:paper.pdf#p3]`，定位不了就只写文件名）——① 事实性、可独立核查；② 来自**单一**来源直出；③ 该来源若变更会影响这条论断的对错。你自己的综合/对比/结论、过渡句、常识**一律不标**（页级 `sources` 已兜底）。不要每句都标。引用的来源必须在该页 `sources` 中，否则 lint 报悬空引用。
    - **高风险写入**（整页覆写已有页、版本回退等）建议加 `--review` 暂存为 diff 待人审：`loom write <name> --from-file <tmp.md> --base-hash <h> --review`；用户 `loom review show/apply/reject <id>` 决定是否落盘。append 类非破坏性更新无需。
 7. 为来源本身建一页 `source` 类型摘要页，`sources` 回指 raw 路径。
 8. **[你]** 若新信息与已有页面矛盾：在双方页面各 `loom update --section 争议 --op append` 一节，用 ⚠️ 标注双方论点与来源。

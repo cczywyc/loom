@@ -2026,13 +2026,13 @@ def test_lint_reports_claim_level_staleness(loom, wiki_root, tmp_path):
 
 ## Task 5.5: 审核队列（review）
 
-**目的：** 高风险改动（整页覆写、版本回退类）可先**staged 成 diff** 由人审后落盘——把"人在环"做成可选机制而非口头约定。
+> **✅ 已完成** · 2026-06-11 · commit `9241b36` · 全量 124 passed，ruff/format 全绿。新增 `loom.review.queue.ReviewQueue`（`.loom/review/<seq>-<name>.json`，含 name/新内容/base_hash/unified diff/staged_at）+ `ReviewItem` 模型。Loom：`stage_review`/`stage_update_review`/`list_reviews`/`get_review`/`apply_review`/`reject_review`；apply 走正常 `write_page`（完整校验+OCC），记 `REVIEW … applied` 并出队，磁盘已变则 Conflict。CLI：`loom review list/show/apply/reject` + `write/update --review`（store 加 `preview_update` 算段级更新结果不落盘）。SKILL.md 补注高风险写入建议 `--review`。实测 CLI 全流程：staged→show 干净 diff→apply 生效。
 
 **Files:**
 - Create: `src/loom/review/queue.py`；Modify: `cli.py`（`loom review list/show/apply/reject`、`write/update --review`）
 - Test: `tests/review/test_queue.py`
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 ```python
 def test_review_stages_instead_of_writing(loom, wiki_root):
@@ -2050,13 +2050,13 @@ def test_reject_review_discards(loom):
     ...  # reject(rid) → .loom/review/ 清除、页面不变
 ```
 
-- [ ] **Step 2–4: 红→实现→绿**：staged 项 = `.loom/review/<seq>-<name>.json`（含 name、新内容、base_hash、`difflib.unified_diff` 文本、staged_at）；apply 走正常 `write_page(base_hash=...)` 享受全部校验。SKILL.md 补注：高风险操作建议 `--review`。
-- [ ] **Step 5: Commit** — `git commit -m "feat: review queue for high-risk writes"`
+- [x] **Step 2–4: 红→实现→绿**：staged 项 = `.loom/review/<seq>-<name>.json`（含 name、新内容、base_hash、`difflib.unified_diff` 文本、staged_at）；apply 走正常 `write_page(base_hash=...)` 享受全部校验。SKILL.md 补注：高风险操作建议 `--review`。
+- [x] **Step 5: Commit** — `git commit -m "feat: review queue for high-risk writes"`
 
 ### M5 验收（DoD）
-- [ ] 跨进程并发测试全绿（含 kill -9 锁活性）；index/log 在 10 并发下无丢失更新
-- [ ] 冲突报错包含 current_hash + 变更节列表，agent 单步可恢复
-- [ ] 注入分隔不可伪造（转义证明）；论断级 staleness 精确；review 全流程可用
+- [x] 跨进程并发测试全绿（含 kill -9 锁活性）；index/log 在 10 并发下无丢失更新
+- [x] 冲突报错包含 current_hash + 变更节列表，agent 单步可恢复
+- [x] 注入分隔不可伪造（转义证明）；论断级 staleness 精确；review 全流程可用
 
 ---
 

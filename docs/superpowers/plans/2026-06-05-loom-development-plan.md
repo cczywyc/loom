@@ -2064,14 +2064,14 @@ def test_reject_review_discards(loom):
 
 ## Task 6.1: `[auto]` orchestrator + providers
 
-**目的：** 无 agent 场景的便利出口：可插拔 LLMProvider 在工具内临时扮演大脑跑完整 ingest/query。**core 零依赖于它**；测试全部 FakeProvider，不联网。
+> **✅ 已完成** · 2026-06-11 · commit `9844284` · 全量 126 passed，ruff/format 全绿。`auto/providers.py`：`LLMProvider` Protocol（`complete(system,user)->str`）+ `AnthropicProvider`/`OpenAICompatProvider`（惰性 import SDK，缺 `[auto]` extra 抛带 `pip install 'loom-wiki[auto]'` 的 LoomError）。`auto/orchestrator.py`：`auto_ingest`（register→parse(**wrap**)→抽取→逐项 find_related→消解 create/merge→write/update→purpose；prompt 模板为模块常量、system 含 schema 全文；JSON 解析失败重试一次）+ `auto_query`（search→read→综合）+ `AutoReport`。CLI `loom ingest/query --auto`（无 --auto 给友好提示；缺 extra → exit 1）。`examples/standalone_auto.py`。**实测 core 零依赖**：import loom.api 不拉入 anthropic/openai，连 orchestrator 都惰性。测试全 FakeProvider，不联网。
 
 **Files:**
 - Create: `src/loom/auto/__init__.py`, `src/loom/auto/providers.py`, `src/loom/auto/orchestrator.py`, `examples/standalone_auto.py`
 - Modify: `cli.py`（`loom ingest --auto PATH`、`loom query --auto Q`；未装 extra 时报 `pip install 'loom-wiki[auto]'`）
 - Test: `tests/auto/test_orchestrator.py`
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 ```python
 # tests/auto/test_orchestrator.py
@@ -2100,11 +2100,11 @@ def test_auto_unavailable_without_extra(monkeypatch):
     ...  # monkeypatch import anthropic/openai 失败 → CLI --auto 退出 1，提示安装 extra
 ```
 
-- [ ] **Step 2: 确认失败。Step 3: 实现要点**：
+- [x] **Step 2: 确认失败。Step 3: 实现要点**：
   - `providers.py`：`LLMProvider` Protocol（`complete(system, user) -> str`）+ `AnthropicProvider` / `OpenAICompatProvider`（base_url 可指 Ollama/vLLM）；惰性 import，缺包时 `LoomError` 提示装 extra。
   - `orchestrator.py`：严格按 SKILL.md 步骤编排（register → parse(wrap) → 抽取 prompt → 逐项 find_related → 消解 prompt → write/update → purpose prompt），prompt 模板为模块常量（system 含 schema.md 全文）；provider 返回 JSON 解析失败重试一次后报错。**不实现 lint --auto**（机械段本就无需 LLM）。
   - `auto_query`：search → read → 综合 prompt → 可选存 query 页。
-- [ ] **Step 4: 确认通过。Step 5: Commit** — `git commit -m "feat: optional [auto] orchestrated edge with pluggable providers"`
+- [x] **Step 4: 确认通过。Step 5: Commit** — `git commit -m "feat: optional [auto] orchestrated edge with pluggable providers"`
 
 ## Task 6.2: DOCX 解析器
 

@@ -20,8 +20,8 @@ class WikiStore:
 
     def __init__(self, paths: LoomPaths):
         self.paths = paths
-        self.index = IndexManager(paths.index_md)
-        self.log = LogWriter(paths.log_md)
+        self.index = IndexManager(paths.index_md, paths.loom_dir)
+        self.log = LogWriter(paths.log_md, paths.loom_dir)
 
     # ---- 读取面 ----
 

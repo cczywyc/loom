@@ -1901,12 +1901,14 @@ def test_deterministic_ordering(loom):
 
 ## Task 5.1: 多进程并发加固
 
+> **✅ 已完成** · 2026-06-11 · commit `ea794fe` · 全量 111 passed，ruff/format 全绿。3 个多进程测试：① 2 进程写同一新页 → 恰好一个成功、一个撞 OCC Conflict（page lock + OCC 跨进程有效）；② 10 进程写不同页 → 全成功且 index 无丢失更新。**②先暴露真 bug**：各进程只持自己的 page lock，却无保护地读改写共享 index.md → 互相覆盖（实测 index 丢条目）；**修复**：IndexManager/LogWriter 各用全局 `__index__`/`__log__` filelock 包住整段读改写，跑 3× 不再 flaky。③ kill -9 持锁子进程后父进程 <1s 拿到锁 → 证实 flock 随进程死亡自动释放、**无需手工陈旧锁清理**，结论写进 `lock.py` docstring。
+
 **目的：** 证实"MCP 常驻 + CLI 冷启动 + Obsidian 手编"同时发生也不坏库——锁与 OCC 在**跨进程**下真实有效（M0 只测了进程内）。
 
 **Files:**
 - Test: `tests/core/test_concurrency.py`；Modify: `src/loom/core/lock.py`（陈旧锁说明见下）
 
-- [ ] **Step 1: 写失败/验证测试**
+- [x] **Step 1: 写失败/验证测试**
 
 ```python
 # tests/core/test_concurrency.py
@@ -1939,9 +1941,9 @@ def test_ten_processes_distinct_pages_all_succeed_index_consistent(wiki_root):
     assert all(f"[[distinct-{i}|" in index for i in range(10))   # index 无丢失更新
 ```
 
-- [ ] **Step 2: 跑测试。**预期暴露真 bug：10 进程并发 upsert `index.md` 会互相覆盖（index 写入不在页面锁保护内）。**修复**：IndexManager/LogWriter 各用独立全局锁（`page_lock(loom_dir, "__index__")` / `"__log__"`）包住自身的读改写。这正是本任务存在的意义。
-- [ ] **Step 3: 陈旧锁**：`filelock` 基于 flock，进程死亡即自动释放，**无需**手工陈旧锁清理——写一个测试证实（子进程持锁中被 kill -9，父进程随后 0.5s 内能拿到锁），并在 `lock.py` docstring 记下这个结论。
-- [ ] **Step 4: 全量回归。Step 5: Commit** — `git commit -m "fix: cross-process safety for index/log; prove lock liveness"`
+- [x] **Step 2: 跑测试。**预期暴露真 bug：10 进程并发 upsert `index.md` 会互相覆盖（index 写入不在页面锁保护内）。**修复**：IndexManager/LogWriter 各用独立全局锁（`page_lock(loom_dir, "__index__")` / `"__log__"`）包住自身的读改写。这正是本任务存在的意义。
+- [x] **Step 3: 陈旧锁**：`filelock` 基于 flock，进程死亡即自动释放，**无需**手工陈旧锁清理——写一个测试证实（子进程持锁中被 kill -9，父进程随后 0.5s 内能拿到锁），并在 `lock.py` docstring 记下这个结论。
+- [x] **Step 4: 全量回归。Step 5: Commit** — `git commit -m "fix: cross-process safety for index/log; prove lock liveness"`
 
 ## Task 5.2: OCC 全链路收口
 

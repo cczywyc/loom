@@ -2118,11 +2118,13 @@ def test_auto_unavailable_without_extra(monkeypatch):
 
 ## Task 6.3:（可选门）`[vector]` 检索后端
 
+> **⏭️ 已跳过（决策门通过）** · 2026-06-11。在 M3 演示库（11 页中文）上用 20 个真实问题实测 BM25+jieba 命中率：**top-3 = 18/20 = 90%、top-5 = 95%**，均 ≥ 85% 门槛 → 按计划**跳过 vector 后端**（个人尺度 BM25 已足够，架构 §九判断得实测背书）。记录见 `docs/test-reports/2026-06-11-m6-bm25-vector-gate.md`；重启条件（>1000 页或同义召回下降）与实现形状均已在该记录与本任务下保留。结论将写入 README（Task 6.4）。
+
 **目的：** 架构预留的可选后端。**默认建议跳过**——执行到此时先跑决策门：用 M3 演示库 + 20 个真实问题人工评估 BM25 命中率，≥85% 即记录结论、跳过本任务（在 README 写明"个人尺度 BM25 已足够"的实测依据）；<85% 才实现。
 
 实现时的形状（仅在门未通过时执行）：`search/vector.py`（embedding 端点协议 + `.loom/vectors.json` 余弦检索）、`mode="vector"/"hybrid"`（RRF 融合）、FakeEmbedder 测试。这是 mechanical 窄依赖，不违反 Brainless Core。
 
-- [ ] **决策门执行并记录 → （视结果）实现或跳过 → Commit**
+- [x] **决策门执行并记录 → （视结果）实现或跳过 → Commit** — 门通过（90% top-3），**跳过实现**，记录已提交。
 
 ## Task 6.4: README、集成指南、发布检查
 

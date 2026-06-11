@@ -1992,13 +1992,13 @@ def test_delimiter_spoofing_neutralized():
 
 ## Task 5.4: 行内引用溯源（`^[src:…]`）
 
-**目的：** 论断级溯源：让 staleness 能定位到具体论断而非整页——架构 frontmatter 设计预留的那条路在这里走通。
+> **✅ 已完成** · 2026-06-11 · commit `a4aec71` · 全量 120 passed，ruff/format 全绿。新增 `loom.security.citations`：`CITE_RE` + `extract_citations(body)→[Citation(source,locator,line)]`（纯机械、带行号）。lint 增强：① stale 时按行内引用**精确点名受影响论断行**（实测 message=「…受影响论断：注意力机制是关键 ^[src:paper.md#p1]」，不含未引用的论断）；② 引用的来源不在页面 `sources` → 复用 `broken-link` Finding 并注明是 citation。三套 schema.md 模板补了引用写法说明。`Finding` 模型不变（信息进 message）。
 
 **Files:**
 - Create: `src/loom/security/citations.py`；Modify: `lint/structural.py`（stale Finding 附受影响论断行）
 - Test: `tests/security/test_citations.py`
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 ```python
 from loom.security.citations import extract_citations, Citation
@@ -2021,8 +2021,8 @@ def test_lint_reports_claim_level_staleness(loom, wiki_root, tmp_path):
     assert "论断甲" in stale.message and "论断乙" not in stale.message   # 精确到论断
 ```
 
-- [ ] **Step 2–4: 红→实现→绿**：`CITE_RE = re.compile(r"\^\[src:([^\]#]+)(?:#([^\]]+))?\]")`；lint 校验引用的源存在于页面 `sources`（不存在 → 新 Finding kind 复用 `broken-link`，message 注明是 citation）。schema.md 模板补一行引用写法说明。
-- [ ] **Step 5: Commit** — `git commit -m "feat: inline claim-level citations with precise staleness"`
+- [x] **Step 2–4: 红→实现→绿**：`CITE_RE = re.compile(r"\^\[src:([^\]#]+)(?:#([^\]]+))?\]")`；lint 校验引用的源存在于页面 `sources`（不存在 → 新 Finding kind 复用 `broken-link`，message 注明是 citation）。schema.md 模板补一行引用写法说明。
+- [x] **Step 5: Commit** — `git commit -m "feat: inline claim-level citations with precise staleness"`
 
 ## Task 5.5: 审核队列（review）
 
